@@ -17,7 +17,7 @@ export default async function ReportsPage() {
     .from('profiles')
     .select('firm_id')
     .eq('id', user.id)
-    .single()
+    .single<{ firm_id: string }>()
 
   if (!profile?.firm_id) {
     return (

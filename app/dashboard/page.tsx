@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     .from('profiles')
     .select('firm_id, full_name')
     .eq('id', user.id)
-    .single()
+    .single<{ firm_id: string; full_name: string }>()
 
   if (!profile?.firm_id) {
     // User doesn't have a firm yet - show onboarding

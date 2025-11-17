@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .single<{ firm_id: string; full_name: string; role: string }>()
 
   // Get firm info
   const { data: firm } = await supabase
