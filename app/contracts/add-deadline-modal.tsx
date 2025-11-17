@@ -59,7 +59,7 @@ export default function AddDeadlineModal({ contract, onClose }: AddDeadlineModal
         .from('profiles')
         .select('firm_id')
         .eq('id', user.id)
-        .single()
+        .single<{ firm_id: string }>()
 
       if (!profile?.firm_id) throw new Error('No firm associated')
 
@@ -72,7 +72,7 @@ export default function AddDeadlineModal({ contract, onClose }: AddDeadlineModal
           type: formData.type,
           description: formData.description,
           critical_level: formData.critical_level,
-        })
+        } as any)
 
       if (insertError) throw insertError
 

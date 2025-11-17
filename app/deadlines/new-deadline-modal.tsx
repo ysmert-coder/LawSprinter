@@ -46,7 +46,7 @@ export default function NewDeadlineModal({ cases, firmId }: NewDeadlineModalProp
           type: formData.type || null,
           description: formData.description || null,
           critical_level: formData.critical_level,
-        })
+        } as any)
 
       if (insertError) throw insertError
 
