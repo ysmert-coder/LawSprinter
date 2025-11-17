@@ -44,8 +44,8 @@ export default async function ClientsPage() {
     .order('full_name', { ascending: true })
 
   // Transform data to include case counts
-  const clientsWithStats = clients?.map(client => ({
-    ...client as any,
+  const clientsWithStats = clients?.map((client: any) => ({
+    ...client,
     openCasesCount: client.cases?.filter((c: any) => c.status === 'open').length || 0,
     totalCasesCount: client.cases?.length || 0,
   })) || []
