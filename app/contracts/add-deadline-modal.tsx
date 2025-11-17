@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabaseBrowser'
+import { createClient } from '@/lib/supabase-browser'
 
 interface Contract {
   id: string
