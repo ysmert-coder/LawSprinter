@@ -1,0 +1,8 @@
+# Render Deploy Trigger
+# This file is used to force a fresh deploy on Render.com
+# Last updated: 2025-11-18T00:22:00Z
+
+Deploy ID: force-fresh-build-no-cache
+Commit: 534bf63
+Status: Forcing fresh build without cache
+
