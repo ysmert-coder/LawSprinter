@@ -3,6 +3,7 @@ import { createBrowserClient } from '@supabase/ssr'
 /**
  * Create a Supabase client for use in the browser (Client Components)
  * This client will automatically handle the user session
+ * @returns Supabase client instance
  */
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
