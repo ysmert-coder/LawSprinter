@@ -20,7 +20,7 @@ export default async function CasesPage() {
     .from('profiles')
     .select('firm_id')
     .eq('id', user.id)
-    .single()
+    .single<{ firm_id: string }>()
 
   if (!profile?.firm_id) {
     return (
