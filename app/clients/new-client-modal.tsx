@@ -43,7 +43,7 @@ export default function NewClientModal({ firmId }: NewClientModalProps) {
           address: formData.address || null,
           tax_number: formData.tax_number || null,
           notes: formData.notes || null,
-        })
+        } as any)
 
       if (insertError) throw insertError
 
