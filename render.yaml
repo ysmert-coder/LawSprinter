@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: lawsprinter
+    env: node
+    region: frankfurt  # En yakın bölge (Türkiye için)
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: N8N_WEBHOOK_CONTRACT_ANALYZE
+        sync: false
+      - key: N8N_WEBHOOK_HEARING_FOLLOWUP
+        sync: false
+      - key: N8N_WEBHOOK_CLIENT_STATUS_NOTIFY
+        sync: false
+      - key: N8N_WEBHOOK_CASE_ASSISTANT
+        sync: false
+      - key: N8N_WEBHOOK_STRATEGY_GENERATOR
+        sync: false
+      - key: N8N_WEBHOOK_CLIENT_PROFILE
+        sync: false
+      - key: N8N_WEBHOOK_TRAINING
+        sync: false
+      - key: N8N_WEBHOOK_INVOICE_REMINDER
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true
+
