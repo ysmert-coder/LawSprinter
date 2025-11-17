@@ -1,0 +1,24 @@
+# Render.com Environment Variables
+# Kopyala-yapıştır için hazır liste
+
+PORT=10000
+
+NODE_ENV=production
+
+# Supabase Configuration (ZORUNLU - Supabase Dashboard'dan al)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# N8N Webhook URLs (Opsiyonel - n8n instance'ından al)
+N8N_WEBHOOK_CONTRACT_ANALYZE=http://localhost:5678/webhook/contract-analyze
+N8N_WEBHOOK_HEARING_FOLLOWUP=http://localhost:5678/webhook/hearing-followup
+N8N_WEBHOOK_CLIENT_STATUS_NOTIFY=http://localhost:5678/webhook/client-status-notify
+N8N_WEBHOOK_CASE_ASSISTANT=http://localhost:5678/webhook/case-assistant
+N8N_WEBHOOK_STRATEGY_GENERATOR=http://localhost:5678/webhook/strategy-generator
+N8N_WEBHOOK_CLIENT_PROFILE=http://localhost:5678/webhook/client-profile
+N8N_WEBHOOK_TRAINING=http://localhost:5678/webhook/training
+N8N_WEBHOOK_INVOICE_REMINDER=http://localhost:5678/webhook/invoice-reminder
+
+# NOT: NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY değerlerini
+# Supabase Dashboard → Settings → API bölümünden kopyalayıp yapıştır!
+
