@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-browser'
+import { createClient } from '@/utils/supabase'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
