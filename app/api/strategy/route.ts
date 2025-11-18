@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/src/lib/supabaseServer'
-import { generateStrategyWithAI } from '@/src/lib/services/ai'
+import { createClient } from '../../../src/lib/supabaseServer'
+import { generateStrategyWithAI } from '../../../src/lib/services/ai'
 
 export async function POST(request: NextRequest) {
   try {

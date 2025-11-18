@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/src/lib/supabaseServer'
+import { createClient } from '../../src/lib/supabaseServer'
 import Link from 'next/link'
 import Sidebar from './sidebar'
 
