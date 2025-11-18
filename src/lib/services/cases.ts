@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '../supabaseServer'
 import { Database, InsertDto, Case } from '@/types/database'
 
 type CaseInsert = InsertDto<'cases'>

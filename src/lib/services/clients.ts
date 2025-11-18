@@ -4,7 +4,7 @@
  * Manages client data, messages, and AI-generated profiles
  */
 
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '../supabaseServer'
 
 export interface Client {
   id: string

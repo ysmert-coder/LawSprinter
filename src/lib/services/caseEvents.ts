@@ -4,7 +4,7 @@
  * Manages case events and client-facing activities
  */
 
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '../supabaseServer'
 import { Database, InsertDto } from '@/types/database'
 
 type CaseEventInsert = InsertDto<'case_events'>

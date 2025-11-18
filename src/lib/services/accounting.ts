@@ -4,7 +4,7 @@
  * Manages invoices and payments for legal services
  */
 
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '../supabaseServer'
 
 export interface Invoice {
   id: string

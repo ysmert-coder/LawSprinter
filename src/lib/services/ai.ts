@@ -5,7 +5,7 @@
  * No direct AI provider dependencies in Next.js code.
  */
 
-import { callN8NWebhook } from '@/lib/n8n'
+import { callN8NWebhook } from '../n8n'
 
 /**
  * Case Assistant AI Response
