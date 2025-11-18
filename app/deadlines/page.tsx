@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '@/src/lib/supabaseServer'
 import { redirect } from 'next/navigation'
 import DeadlinesTable from './deadlines-table'
 import NewDeadlineModal from './new-deadline-modal'

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '@/src/lib/supabaseServer'
 import { redirect } from 'next/navigation'
 import ClientsList from './clients-list'
 import NewClientModal from './new-client-modal'

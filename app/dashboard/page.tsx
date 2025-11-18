@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '@/src/lib/supabaseServer'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getFirmCriticalDeadlines, getFirmUpcomingDeadlines } from '@/lib/services/deadlines'
-import { getFirmPendingClientEvents } from '@/lib/services/caseEvents'
-import { getFirmExpiringContracts } from '@/lib/services/contracts'
-import { getCaseStatusDistribution, getMonthlyCaseStats } from '@/lib/services/cases'
+import { getFirmCriticalDeadlines, getFirmUpcomingDeadlines } from '@/src/lib/services/deadlines'
+import { getFirmPendingClientEvents } from '@/src/lib/services/caseEvents'
+import { getFirmExpiringContracts } from '@/src/lib/services/contracts'
+import { getCaseStatusDistribution, getMonthlyCaseStats } from '@/src/lib/services/cases'
 
 export default async function DashboardPage() {
   const supabase = await createClient()

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabaseServer'
-import { triggerContractAnalyze } from '@/lib/n8n'
+import { createClient } from '@/src/lib/supabaseServer'
+import { triggerContractAnalyze } from '@/src/lib/n8n'
 
 export async function POST(request: NextRequest) {
   try {
