@@ -165,10 +165,10 @@ lawsprinter/
 │   ├── clients/                  # Müşteri Yönetimi
 │   ├── dava-asistani/            # AI Dava Asistanı
 │   ├── dava-strateji/            # Dava Strateji Merkezi
-│   ├── akademi/                  # Avukat Akademi (Eğitim)
 │   ├── muhasebe/                 # Muhasebe
 │   ├── reports/                  # Raporlama
 │   ├── settings/                 # Ayarlar
+│   ├── _deprecated/              # Devre dışı özellikler
 │   ├── api/
 │   │   └── contracts/analyze/    # Contract AI analysis endpoint
 │   ├── layout.tsx                # Root layout
@@ -210,7 +210,7 @@ lawsprinter/
 3. **Protected Routes:**
    - Tüm ana sayfalar middleware ile korunur:
      - `/dashboard`, `/cases`, `/deadlines`, `/contracts`, `/clients`
-     - `/dava-asistani`, `/dava-strateji`, `/akademi`
+     - `/dava-asistani`, `/dava-strateji`
      - `/muhasebe`, `/reports`, `/settings`
    - Oturum yoksa `/auth/sign-in` sayfasına yönlendirilir
    - Oturum varsa auth sayfalarından `/dashboard`'a yönlendirilir
@@ -258,12 +258,7 @@ lawsprinter/
    - Ceza, Gayrimenkul, İcra, Aile hukuku
    - Alan bazlı strateji üretimi (placeholder)
 
-8. **Avukat Akademi (/akademi)** - Eğitim ve simülasyon
-   - Senaryo listesi
-   - Karar simülatörü (placeholder)
-   - İlerleme takibi
-
-9. **Muhasebe (/muhasebe)** - Gelir-gider takibi
+8. **Muhasebe (/muhasebe)** - Gelir-gider takibi
    - Alacak ve tahsilat özeti
    - Gelir-gider listesi
    - Ödeme hatırlatma (n8n entegrasyonu hazır)

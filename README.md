@@ -17,7 +17,6 @@
 - **Dava Asistanı**: Otomatik dava analizi, savunma stratejisi ve yapılacaklar listesi
 - **Strateji Merkezi**: Hukuk alanına göre detaylı strateji önerileri
 - **Müşteri Profil Analizi**: AI ile müşteri psikolojisi ve iletişim tarzı analizi
-- **Avukat Akademi**: Seviye bazlı eğitim içeriği üretimi
 - **Akıllı Hatırlatmalar**: Nazik ve profesyonel ödeme hatırlatma mesajları
 
 ### 📋 Dosya & Süre Yönetimi
@@ -268,8 +267,8 @@ LawSprinter/
 │   ├── clients/           # Client management
 │   ├── dava-asistani/     # AI Case Assistant
 │   ├── dava-strateji/     # Strategy Center
-│   ├── akademi/           # Lawyer Academy
 │   ├── muhasebe/          # Accounting
+│   ├── _deprecated/       # Deprecated features
 │   └── api/               # API routes
 ├── lib/                   # Utilities & services
 │   ├── services/          # Supabase services

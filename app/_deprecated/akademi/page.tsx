@@ -1,4 +1,17 @@
-import { createClient } from '../../src/lib/supabaseServer'
+/**
+ * DEPRECATED: Avukat Akademi Feature
+ * 
+ * This feature has been temporarily disabled.
+ * To re-enable:
+ * 1. Move this file back to app/akademi/page.tsx
+ * 2. Add '/akademi' to protectedRoutes in middleware.ts
+ * 3. Add the menu item back to app/dashboard/sidebar.tsx
+ * 
+ * Date disabled: 2024-11-21
+ * Reason: Feature temporarily disabled per user request
+ */
+
+import { createClient } from '../../../src/lib/supabaseServer'
 import { redirect } from 'next/navigation'
 
 export default async function AkademiPage() {

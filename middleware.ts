@@ -43,7 +43,6 @@ export async function middleware(request: NextRequest) {
     '/clients',
     '/dava-asistani',
     '/dava-strateji',
-    '/akademi',
     '/muhasebe',
     '/reports',
     '/settings'

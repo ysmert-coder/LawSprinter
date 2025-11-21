@@ -166,33 +166,14 @@ Webhook Response
 
 ---
 
-### 4. Training Content Generator (Avukat Akademi)
+### 4. Training Content Generator (Deprecated)
 
-**Purpose**: Generate educational content for lawyers
+**Status**: ⚠️ **DEPRECATED** - This feature has been temporarily disabled.
 
-**Webhook URL**: `N8N_TRAINING_WEBHOOK_URL`
+**Previous Purpose**: Generate educational content for lawyers (Avukat Akademi)
 
-**Input Payload**:
-```json
-{
-  "userId": "uuid",
-  "topic": "Topic description",
-  "level": "intern|junior|senior",
-  "format": "notes|qa|checklist|case_study",
-  "timestamp": "ISO 8601"
-}
-```
-
-**Expected Output**:
-```json
-{
-  "outline": ["Section 1", "Section 2", "..."],
-  "content": "Full training content",
-  "keyTakeaways": ["Takeaway 1", "..."],
-  "practicalExamples": ["Example 1", "..."],
-  "resources": ["Resource 1", "..."]
-}
-```
+**Note**: The Avukat Akademi feature has been moved to `app/_deprecated/akademi/`. 
+To re-enable, see instructions in the deprecated file.
 
 ---
 
