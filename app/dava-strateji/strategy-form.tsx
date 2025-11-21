@@ -1,16 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '../../app/supabase'
+import { createClient } from '../supabase'
 
-interface CaseAssistantFormProps {
-  userId: string
-}
+type AreaType = 'ceza' | 'gayrimenkul' | 'icra_iflas' | 'aile'
 
-type CaseAssistantResponse = {
-  eventSummary: string
-  defenceOutline: string
-  actionItems: string[]
+type StrategyResponse = {
+  summary: string
+  keyIssues: string[]
+  recommendedStrategy: string
+  risks?: string[]
   sources?: {
     id?: string
     title?: string
@@ -21,24 +20,48 @@ type CaseAssistantResponse = {
   confidenceScore?: number
 }
 
-export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
-  const [selectedType, setSelectedType] = useState<string>('')
-  const [description, setDescription] = useState('')
+interface StrategyFormProps {
+  userId: string
+}
+
+export default function StrategyForm({ userId }: StrategyFormProps) {
+  const [selectedArea, setSelectedArea] = useState<AreaType | null>(null)
+  const [question, setQuestion] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [analysis, setAnalysis] = useState<CaseAssistantResponse | null>(null)
+  const [strategy, setStrategy] = useState<StrategyResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const caseTypes = [
-    { value: 'labor', label: 'İş Hukuku', icon: '💼' },
-    { value: 'criminal', label: 'Ceza', icon: '⚖️' },
-    { value: 'civil', label: 'Hukuk', icon: '📋' },
-    { value: 'family', label: 'Aile', icon: '👨‍👩‍👧‍👦' },
-    { value: 'commercial', label: 'Ticaret', icon: '🏢' },
-    { value: 'administrative', label: 'İdari', icon: '🏛️' },
-    { value: 'execution', label: 'İcra', icon: '📜' },
-    { value: 'other', label: 'Diğer', icon: '📁' },
+  const lawAreas = [
+    {
+      id: 'ceza' as AreaType,
+      name: 'Ceza Hukuku',
+      icon: '⚖️',
+      description: 'Ceza davalarında strateji geliştirin',
+      color: 'from-red-500 to-red-600'
+    },
+    {
+      id: 'gayrimenkul' as AreaType,
+      name: 'Gayrimenkul',
+      icon: '🏠',
+      description: 'Tapu, kira ve inşaat davaları',
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 'icra_iflas' as AreaType,
+      name: 'İcra & İflas',
+      icon: '📜',
+      description: 'İcra takibi ve iflas süreçleri',
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      id: 'aile' as AreaType,
+      name: 'Aile / Boşanma',
+      icon: '👨‍👩‍👧‍👦',
+      description: 'Boşanma, velayet ve nafaka davaları',
+      color: 'from-pink-500 to-pink-600'
+    },
   ]
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,10 +74,10 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
     const supabase = createClient()
     const fileExt = file.name.split('.').pop()
     const fileName = `${userId}-${Date.now()}.${fileExt}`
-    const filePath = `case_uploads/${fileName}`
+    const filePath = `strategy_uploads/${fileName}`
 
     const { data, error } = await supabase.storage
-      .from('case_uploads')
+      .from('strategy_uploads')
       .upload(filePath, file)
 
     if (error) {
@@ -63,58 +86,61 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('case_uploads')
+      .from('strategy_uploads')
       .getPublicUrl(filePath)
 
     return publicUrl
   }
 
   const handleSubmit = async () => {
-    if (!selectedType) {
-      setError('Lütfen bir dava türü seçin')
+    if (!selectedArea) {
+      setError('Lütfen bir hukuk alanı seçin')
       return
     }
 
-    if (!file) {
-      setError('Lütfen bir dosya yükleyin')
+    if (!question.trim()) {
+      setError('Lütfen bir soru veya açıklama girin')
       return
     }
 
     setLoading(true)
     setError(null)
-    setAnalysis(null)
+    setStrategy(null)
 
     try {
-      // 1. Upload file to Supabase Storage
-      setUploading(true)
-      const fileUrl = await uploadFileToSupabase(file)
-      setUploading(false)
+      let fileUrl: string | undefined
 
-      console.log('[case-assistant] File uploaded:', fileUrl)
+      // Upload file if provided
+      if (file) {
+        setUploading(true)
+        fileUrl = await uploadFileToSupabase(file)
+        setUploading(false)
+        console.log('[strategy] File uploaded:', fileUrl)
+      }
 
-      // 2. Call API with file URL
-      const response = await fetch('/api/case-assistant', {
+      // Call API
+      const response = await fetch('/api/strategy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          area: selectedArea,
+          question: question.trim(),
           fileUrl,
-          caseType: selectedType,
-          shortDescription: description || undefined,
         }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Analiz başarısız oldu')
+        throw new Error(data.error || 'Strateji oluşturulamadı')
       }
 
-      console.log('[case-assistant] Analysis received:', data)
-      setAnalysis(data)
+      console.log('[strategy] Strategy received:', data)
+      setStrategy(data)
     } catch (err: any) {
-      console.error('[case-assistant] Error:', err)
+      console.error('[strategy] Error:', err)
       setError(err.message || 'Bir hata oluştu')
     } finally {
       setLoading(false)
@@ -124,21 +150,53 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
 
   return (
     <div>
-      {/* Main Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
-        {/* Upload Section */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dosya Yükleme</h2>
-          
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-indigo-400 transition-colors">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Law Areas Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {lawAreas.map((area) => (
+          <div
+            key={area.id}
+            onClick={() => setSelectedArea(area.id)}
+            className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden hover:shadow-md transition-all cursor-pointer ${
+              selectedArea === area.id ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
+            }`}
+          >
+            <div className={`h-2 bg-gradient-to-r ${area.color}`}></div>
+            <div className="p-6">
+              <div className="flex items-start">
+                <span className="text-4xl mr-4">{area.icon}</span>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">{area.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{area.description}</p>
+                  {selectedArea === area.id && (
+                    <div className="mt-3 inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Seçildi
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Strategy Generation Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Strateji Oluştur</h2>
+
+        {/* File Upload (Optional) */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Dosya Yükle (Opsiyonel)
+          </label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
+            <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="mt-4 text-sm text-gray-600">
-              {file ? file.name : 'PDF, DOCX veya TXT dosyalarını sürükleyip bırakın'}
-            </p>
-            <p className="mt-1 text-xs text-gray-500">
-              veya
+            <p className="mt-2 text-sm text-gray-600">
+              {file ? file.name : 'Dilekçe, tutanak, bilirkişi raporu vb. yükleyin'}
             </p>
             <label className="mt-3 inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
               <input
@@ -152,37 +210,16 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
           </div>
         </div>
 
-        {/* Case Type Selection */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Dava Türü *</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {caseTypes.map((type) => (
-              <button
-                key={type.value}
-                onClick={() => setSelectedType(type.value)}
-                className={`flex flex-col items-center p-4 border-2 rounded-lg transition-colors ${
-                  selectedType === type.value
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
-                }`}
-              >
-                <span className="text-3xl mb-2">{type.icon}</span>
-                <span className="text-sm font-medium text-gray-700">{type.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Description */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kısa Açıklama</h2>
-          
+        {/* Question Input */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Soru / Açıklama *
+          </label>
           <textarea
             rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Dava hakkında kısa bir açıklama yazın (opsiyonel)"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Dava ile ilgili sorunuzu veya durumu detaylı olarak açıklayın..."
             className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm"
           />
         </div>
@@ -201,13 +238,13 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
             <p className="ml-2 text-xs text-gray-600">
-              <strong>Önemli:</strong> AI tarafından üretilen içerik taslak niteliğindedir. 
-              Mutlaka avukat kontrolünden geçmelidir.
+              <strong>Taslak / Öneri:</strong> AI çıktıları kesin hüküm değildir. 
+              Avukat karar vericidir.
             </p>
           </div>
           <button
             onClick={handleSubmit}
-            disabled={loading || uploading || !selectedType || !file}
+            disabled={loading || uploading || !selectedArea || !question.trim()}
             className="ml-4 inline-flex items-center px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
@@ -224,14 +261,14 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Analiz Yapılıyor...
+                Strateji Oluşturuluyor...
               </>
             ) : (
               <>
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                Analiz Et
+                Strateji Üret
               </>
             )}
           </button>
@@ -239,72 +276,78 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
       </div>
 
       {/* Results Section */}
-      {analysis && (
-        <div className="space-y-6">
+      {strategy ? (
+        <div className="mt-6 space-y-6">
           {/* Confidence Score Badge */}
-          {analysis.confidenceScore !== undefined && (
+          {strategy.confidenceScore !== undefined && (
             <div className="flex justify-end">
               <div className="inline-flex items-center px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
                 <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-sm font-semibold text-green-700">
-                  %{Math.round(analysis.confidenceScore * 100)} Güven Skoru
+                  %{Math.round(strategy.confidenceScore * 100)} Güven Skoru
                 </span>
               </div>
             </div>
           )}
 
-          {/* Event Summary */}
-          {analysis.eventSummary && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Olay Özeti
-              </h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{analysis.eventSummary}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Summary */}
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-2">📋</span>
+                <h3 className="text-sm font-semibold text-blue-900">Özet</h3>
+              </div>
+              <p className="text-sm text-blue-700 whitespace-pre-wrap">{strategy.summary}</p>
             </div>
-          )}
 
-          {/* Defence Outline */}
-          {analysis.defenceOutline && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                Savunma İskeleti
-              </h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{analysis.defenceOutline}</p>
-            </div>
-          )}
-
-          {/* Action Items */}
-          {analysis.actionItems && analysis.actionItems.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                Yapılacaklar Listesi
-              </h3>
+            {/* Key Issues */}
+            <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-2">⚠️</span>
+                <h3 className="text-sm font-semibold text-yellow-900">Kilit Noktalar</h3>
+              </div>
               <ul className="space-y-2">
-                {analysis.actionItems.map((item: string, index: number) => (
-                  <li key={index} className="flex items-start">
-                    <svg className="w-5 h-5 mr-2 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-gray-700">{item}</span>
+                {strategy.keyIssues.map((issue, index) => (
+                  <li key={index} className="flex items-start text-sm text-yellow-700">
+                    <span className="mr-2">•</span>
+                    <span>{issue}</span>
                   </li>
                 ))}
               </ul>
             </div>
-          )}
+
+            {/* Recommended Strategy */}
+            <div className="bg-green-50 rounded-lg p-6 border border-green-200 lg:col-span-2">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-2">🎯</span>
+                <h3 className="text-sm font-semibold text-green-900">Önerilen Strateji</h3>
+              </div>
+              <p className="text-sm text-green-700 whitespace-pre-wrap">{strategy.recommendedStrategy}</p>
+            </div>
+
+            {/* Risks */}
+            {strategy.risks && strategy.risks.length > 0 && (
+              <div className="bg-red-50 rounded-lg p-6 border border-red-200 lg:col-span-2">
+                <div className="flex items-center mb-3">
+                  <span className="text-2xl mr-2">🚨</span>
+                  <h3 className="text-sm font-semibold text-red-900">Riskler</h3>
+                </div>
+                <ul className="space-y-2">
+                  {strategy.risks.map((risk, index) => (
+                    <li key={index} className="flex items-start text-sm text-red-700">
+                      <span className="mr-2">•</span>
+                      <span>{risk}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
 
           {/* Sources */}
-          {analysis.sources && analysis.sources.length > 0 && (
+          {strategy.sources && strategy.sources.length > 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,7 +356,7 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
                 Kaynaklar (Emsal Kararlar)
               </h3>
               <div className="space-y-3">
-                {analysis.sources.map((source, index) => (
+                {strategy.sources.map((source, index) => (
                   <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -352,6 +395,15 @@ export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="mt-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <p className="mt-4 text-sm text-gray-600">
+            Henüz strateji üretilmedi. Yukarıdan bir hukuk alanı seçip sorunuzu girin.
+          </p>
         </div>
       )}
     </div>

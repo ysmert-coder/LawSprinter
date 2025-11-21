@@ -68,12 +68,18 @@ export default function SignUpPage() {
       
       // Türkçe hata mesajları
       let errorMessage = 'Kayıt olurken bir hata oluştu'
+      
       if (err.message.includes('already registered') || err.message.includes('User already registered')) {
         errorMessage = 'Bu e-posta adresi zaten kayıtlı'
       } else if (err.message.includes('Invalid email')) {
         errorMessage = 'Geçersiz e-posta adresi'
       } else if (err.message.includes('Password should be')) {
         errorMessage = 'Şifre en az 6 karakter olmalıdır'
+      } else if (err.message.includes('Invalid API key') || err.message.includes('placeholder')) {
+        errorMessage = '⚠️ Supabase bağlantısı yapılandırılmamış. Lütfen yöneticiyle iletişime geçin.'
+      } else if (err.message) {
+        // Show actual error in development
+        errorMessage = `Hata: ${err.message}`
       }
       
       setError(errorMessage)

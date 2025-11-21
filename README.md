@@ -54,6 +54,7 @@
 ### Backend
 - **Supabase** - Database, Auth, Storage
 - **PostgreSQL** - Relational database
+- **pgvector** ✨ NEW! - Vector similarity search
 - **Row Level Security** - Multi-tenant güvenlik
 
 ### AI & Automation
@@ -106,6 +107,7 @@ N8N_CASE_ASSISTANT_WEBHOOK_URL=http://localhost:5678/webhook/case-assistant
 supabase/migrations/001_initial_schema.sql
 supabase/migrations/002_additional_tables.sql
 supabase/migrations/003_extended_features.sql
+supabase/migrations/004_rag_legal_knowledge.sql  # ✨ NEW! RAG System
 ```
 
 ### 5. n8n Workflow'larını Kurun
@@ -128,6 +130,7 @@ Tarayıcıda açın: http://localhost:3000
 - **`SETUP.md`** - Genel kurulum rehberi
 - **`ENV_SETUP.md`** - Environment variables ve webhook setup
 - **`DATABASE_SCHEMA.md`** - Database yapısı ve tablolar
+- **`RAG_SYSTEM_SETUP.md`** ⭐ **NEW!** - RAG sistemi ve pgvector kurulumu
 
 ### n8n & AI Entegrasyonu
 - **`N8N_AI_SETUP.md`** ⭐ - AI workflow'ları detaylı kurulum
@@ -195,7 +198,12 @@ git push origin main
 - `client_messages` - Müşteri mesajları
 - `client_profiles` - AI profil analizleri
 
-**Detaylı şema**: `DATABASE_SCHEMA.md`
+### RAG Tabloları ✨ NEW!
+- `legal_documents` - Hukuk bilgi tabanı (Yargıtay, mevzuat, doktrin)
+- `legal_chunks` - Vektör embeddingler ile semantik arama
+- `private_case_chunks` - Dosya bazlı özel bilgi (kullanıcı yüklemeleri)
+
+**Detaylı şema**: `DATABASE_SCHEMA.md` | **RAG Dokümantasyonu**: `RAG_SYSTEM_SETUP.md`
 
 ---
 
@@ -238,8 +246,8 @@ git push origin main
 - [ ] Email bildirimler
 
 ### v2.0 (Gelecek)
-- [ ] RAG (Retrieval Augmented Generation)
-- [ ] Emsal karar veritabanı
+- [x] **RAG (Retrieval Augmented Generation)** ✨ NEW!
+- [x] **Emsal karar veritabanı** (pgvector + semantic search) ✨ NEW!
 - [ ] Gelişmiş raporlama
 - [ ] Multi-language support
 - [ ] API marketplace
@@ -313,11 +321,12 @@ Bu proje özel bir projedir. Kullanım için izin gereklidir.
 ## 📈 İstatistikler
 
 - **8 Aktif Workflow** (5 AI-powered)
-- **12 Database Tablosu**
+- **15 Database Tablosu** (3 RAG tablosu eklendi ✨)
 - **15+ Sayfa/Ekran**
 - **TypeScript %100**
 - **Türkçe Yerelleştirme**
 - **Multi-tenant Architecture**
+- **pgvector Semantic Search** ✨ NEW!
 
 ---
 

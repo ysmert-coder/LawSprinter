@@ -51,11 +51,13 @@ function getWebhookUrl(type: N8NWebhookType): string {
  * Generic function to call an n8n webhook by type.
  * @param type The webhook type
  * @param payload The JSON payload to send
+ * @param timeout Timeout in milliseconds (default: 20000ms = 20s)
  * @returns The JSON response from n8n
  */
 export async function callN8NWebhook<T = any>(
   type: N8NWebhookType,
-  payload: any
+  payload: any,
+  timeout: number = 20000
 ): Promise<T> {
   const webhookUrl = getWebhookUrl(type)
 
@@ -63,13 +65,20 @@ export async function callN8NWebhook<T = any>(
   console.log('[n8n] Payload:', JSON.stringify(payload, null, 2))
 
   try {
+    // Create abort controller for timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -82,6 +91,12 @@ export async function callN8NWebhook<T = any>(
     return result as T
   } catch (error: any) {
     console.error(`[n8n] ${type} exception:`, error)
+    
+    // Handle timeout specifically
+    if (error.name === 'AbortError') {
+      throw new Error(`n8n ${type} webhook timed out after ${timeout}ms`)
+    }
+    
     throw new Error(`Failed to call n8n ${type} webhook: ${error.message}`)
   }
 }

@@ -541,12 +541,176 @@ export interface Database {
           }
         ]
       }
+      legal_documents: {
+        Row: {
+          id: string
+          title: string
+          source: string
+          doc_type: string
+          court: string | null
+          chamber: string | null
+          decision_no: string | null
+          file_no: string | null
+          date: string | null
+          url: string | null
+          is_active: boolean
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          source: string
+          doc_type: string
+          court?: string | null
+          chamber?: string | null
+          decision_no?: string | null
+          file_no?: string | null
+          date?: string | null
+          url?: string | null
+          is_active?: boolean
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          source?: string
+          doc_type?: string
+          court?: string | null
+          chamber?: string | null
+          decision_no?: string | null
+          file_no?: string | null
+          date?: string | null
+          url?: string | null
+          is_active?: boolean
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      legal_chunks: {
+        Row: {
+          id: number
+          document_id: string
+          chunk_index: number
+          content: string
+          embedding: number[] // vector(1536) represented as number array
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          document_id: string
+          chunk_index: number
+          content: string
+          embedding: number[] | string // Can be array or pgvector string format
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          document_id?: string
+          chunk_index?: number
+          content?: string
+          embedding?: number[] | string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_chunks_document_id_fkey"
+            columns: ["document_id"]
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      private_case_chunks: {
+        Row: {
+          id: number
+          user_id: string
+          case_id: string
+          source: string
+          content: string
+          embedding: number[] // vector(1536) represented as number array
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          case_id: string
+          source: string
+          content: string
+          embedding: number[] | string // Can be array or pgvector string format
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          case_id?: string
+          source?: string
+          content?: string
+          embedding?: number[] | string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_case_chunks_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_case_chunks_case_id_fkey"
+            columns: ["case_id"]
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_legal_documents: {
+        Args: {
+          query_embedding: number[] | string
+          match_count?: number
+          doc_type_filter?: string | null
+          court_filter?: string | null
+        }
+        Returns: {
+          document_id: string
+          chunk_id: number
+          title: string
+          source: string
+          doc_type: string
+          court: string | null
+          chamber: string | null
+          decision_no: string | null
+          date: string | null
+          url: string | null
+          content: string
+          similarity: number
+        }[]
+      }
+      search_private_case_chunks: {
+        Args: {
+          p_user_id: string
+          p_case_id: string
+          query_embedding: number[] | string
+          match_count?: number
+        }
+        Returns: {
+          chunk_id: number
+          source: string
+          content: string
+          similarity: number
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       user_role: 'owner' | 'admin' | 'lawyer' | 'member'
@@ -584,3 +748,12 @@ export type Contract = Tables<'contracts'>
 export type CaseEvent = Tables<'case_events'>
 export type Notification = Tables<'notifications'>
 export type DailySummary = Tables<'daily_summaries'>
+
+// RAG System types
+export type LegalDocument = Tables<'legal_documents'>
+export type LegalChunk = Tables<'legal_chunks'>
+export type PrivateCaseChunk = Tables<'private_case_chunks'>
+
+// Vector search result types
+export type LegalSearchResult = Database['public']['Functions']['search_legal_documents']['Returns'][0]
+export type PrivateCaseSearchResult = Database['public']['Functions']['search_private_case_chunks']['Returns'][0]

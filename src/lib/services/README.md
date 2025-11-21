@@ -65,6 +65,30 @@ Günlük AI özetleri
 - `deleteDailySummary(firmId, date)` - Özet sil
 - `getSummaryStats(firmId)` - Özet istatistikleri
 
+### `rag.ts` ✨ NEW!
+RAG (Retrieval Augmented Generation) - Semantik arama ve bilgi tabanı
+
+**Legal Documents (Public):**
+- `insertLegalDocumentWithChunks(doc, chunks)` - Hukuk belgesi + embeddingler ekle
+- `searchLegalDocuments(embedding, options)` - Semantik arama (Yargıtay, mevzuat)
+- `getLegalDocumentWithChunks(documentId)` - Belge + chunk'ları getir
+- `deactivateLegalDocument(documentId)` - Belgeyi pasifleştir
+
+**Private Case Chunks:**
+- `insertPrivateCaseChunks(userId, caseId, chunks)` - Dosya bazlı özel bilgi ekle
+- `searchPrivateCaseChunks(userId, caseId, embedding, count)` - Dosya içi arama
+- `getPrivateCaseChunks(userId, caseId)` - Tüm chunk'ları getir
+- `deletePrivateCaseChunks(userId, chunkIds)` - Chunk'ları sil
+- `deleteAllPrivateCaseChunks(userId, caseId)` - Tüm chunk'ları sil
+
+**Hybrid Search:**
+- `hybridSearch(userId, caseId, embedding, options)` - Public + Private birleşik arama
+
+**Statistics:**
+- `getRagStatistics()` - RAG sistem istatistikleri
+
+**Detaylı Dokümantasyon:** `RAG_SYSTEM_SETUP.md`
+
 ## 🚀 Kullanım
 
 ### Import
@@ -83,6 +107,9 @@ import {
   createCase,
   createDeadline,
   upsertDailySummary,
+  // RAG System ✨ NEW!
+  searchLegalDocuments,
+  hybridSearch,
 } from '@/lib/services'
 ```
 
@@ -353,6 +380,7 @@ jest.mock('@/lib/supabaseServer', () => ({
 ## 📚 Daha Fazla Bilgi
 
 - **Database Schema:** `DATABASE_SCHEMA.md`
+- **RAG System:** `RAG_SYSTEM_SETUP.md` ✨ NEW!
 - **Type Definitions:** `types/database.ts`
 - **Supabase Client:** `lib/supabaseServer.ts`
 

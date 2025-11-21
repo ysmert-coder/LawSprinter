@@ -55,3 +55,22 @@ export {
   getSummaryStats,
 } from './dailySummaries'
 
+// RAG System (Retrieval Augmented Generation)
+export {
+  // Legal Documents
+  insertLegalDocumentWithChunks,
+  searchLegalDocuments,
+  getLegalDocumentWithChunks,
+  deactivateLegalDocument,
+  // Private Case Chunks
+  insertPrivateCaseChunks,
+  searchPrivateCaseChunks,
+  getPrivateCaseChunks,
+  deletePrivateCaseChunks,
+  deleteAllPrivateCaseChunks,
+  // Hybrid Search
+  hybridSearch,
+  // Statistics
+  getRagStatistics,
+} from './rag'
+
