@@ -1,3 +1,5 @@
+'use client'
+
 import Navbar from './(marketing)/components/navbar'
 import Hero from './(marketing)/components/hero'
 import Features from './(marketing)/components/features'
