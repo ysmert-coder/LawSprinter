@@ -20,6 +20,12 @@ export type N8NWebhookType =
   | 'CONTRACT_ANALYZE'
   | 'HEARING_FOLLOWUP'
   | 'CLIENT_STATUS_NOTIFY'
+  | 'DRAFT_GENERATOR'
+  | 'COLLECTION_ASSISTANT'
+  | 'DRAFT_REVIEWER'
+  | 'EMBEDDINGS'
+  | 'PLEADING_GENERATOR'
+  | 'PLEADING_REVIEW'
 
 /**
  * Get the webhook URL for a specific type
@@ -34,6 +40,12 @@ function getWebhookUrl(type: N8NWebhookType): string {
     CONTRACT_ANALYZE: process.env.N8N_CONTRACT_ANALYZE_WEBHOOK_URL,
     HEARING_FOLLOWUP: process.env.N8N_HEARING_FOLLOWUP_WEBHOOK_URL,
     CLIENT_STATUS_NOTIFY: process.env.N8N_CLIENT_STATUS_NOTIFY_WEBHOOK_URL,
+    DRAFT_GENERATOR: process.env.N8N_DRAFT_GENERATOR_WEBHOOK_URL,
+    COLLECTION_ASSISTANT: process.env.N8N_COLLECTION_ASSISTANT_WEBHOOK_URL,
+    DRAFT_REVIEWER: process.env.N8N_DRAFT_REVIEWER_WEBHOOK_URL,
+    EMBEDDINGS: process.env.N8N_EMBEDDINGS_WEBHOOK_URL,
+    PLEADING_GENERATOR: process.env.N8N_PLEADING_GENERATOR_WEBHOOK_URL,
+    PLEADING_REVIEW: process.env.N8N_PLEADING_REVIEW_WEBHOOK_URL,
   }
 
   const url = urls[type]
@@ -111,6 +123,12 @@ export function getN8nConfigStatus(): Record<N8NWebhookType, boolean> {
     CONTRACT_ANALYZE: isWebhookConfigured('CONTRACT_ANALYZE'),
     HEARING_FOLLOWUP: isWebhookConfigured('HEARING_FOLLOWUP'),
     CLIENT_STATUS_NOTIFY: isWebhookConfigured('CLIENT_STATUS_NOTIFY'),
+    DRAFT_GENERATOR: isWebhookConfigured('DRAFT_GENERATOR'),
+    COLLECTION_ASSISTANT: isWebhookConfigured('COLLECTION_ASSISTANT'),
+    DRAFT_REVIEWER: isWebhookConfigured('DRAFT_REVIEWER'),
+    EMBEDDINGS: isWebhookConfigured('EMBEDDINGS'),
+    PLEADING_GENERATOR: isWebhookConfigured('PLEADING_GENERATOR'),
+    PLEADING_REVIEW: isWebhookConfigured('PLEADING_REVIEW'),
   }
 }
 

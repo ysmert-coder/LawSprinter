@@ -192,3 +192,49 @@ export async function generatePaymentReminderWithAI(payload: {
   }
 }
 
+/**
+ * Collection Assistant Types
+ */
+export type CollectionAssistantChannel = 'email' | 'whatsapp' | 'sms'
+
+export interface CollectionAssistantRequest {
+  clientId: string
+  invoiceIds: string[]
+  preferredChannel: CollectionAssistantChannel
+  tone?: 'soft' | 'neutral' | 'firm'
+}
+
+export interface CollectionAssistantResponse {
+  channel: CollectionAssistantChannel
+  subject?: string // email için
+  message: string // ana metin
+  alternativeMessages?: string[] // AI'den gelen alternatif tekstler
+  nextSteps?: string[] // avukata öneriler
+  suggestedSendTime?: string // ISO string (opsiyonel)
+}
+
+/**
+ * Generate collection message with AI
+ * 
+ * @param payload Collection assistant request
+ * @returns AI-generated collection message
+ */
+export async function generateCollectionMessage(
+  payload: CollectionAssistantRequest & { userId: string }
+): Promise<CollectionAssistantResponse> {
+  try {
+    const response = await callN8NWebhook<CollectionAssistantResponse>(
+      'COLLECTION_ASSISTANT',
+      {
+        ...payload,
+        timestamp: new Date().toISOString(),
+      }
+    )
+
+    return response
+  } catch (error) {
+    console.error('[generateCollectionMessage] Error:', error)
+    throw new Error('Tahsilat mesajı oluşturma sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+  }
+}
+

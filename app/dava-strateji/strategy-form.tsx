@@ -2,23 +2,9 @@
 
 import { useState } from 'react'
 import { createClient } from '../supabase'
+import { StrategyResponse } from '../../lib/types/ai'
 
 type AreaType = 'ceza' | 'gayrimenkul' | 'icra_iflas' | 'aile'
-
-type StrategyResponse = {
-  summary: string
-  keyIssues: string[]
-  recommendedStrategy: string
-  risks?: string[]
-  sources?: {
-    id?: string
-    title?: string
-    court?: string
-    url?: string
-    similarity?: number
-  }[]
-  confidenceScore?: number
-}
 
 interface StrategyFormProps {
   userId: string

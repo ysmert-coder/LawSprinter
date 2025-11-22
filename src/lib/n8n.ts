@@ -20,6 +20,7 @@ export type N8NWebhookType =
   | 'CONTRACT_ANALYZE'
   | 'HEARING_FOLLOWUP'
   | 'CLIENT_STATUS_NOTIFY'
+  | 'COLLECTION_ASSISTANT'
 
 /**
  * Get the webhook URL for a specific type
@@ -34,6 +35,7 @@ function getWebhookUrl(type: N8NWebhookType): string {
     CONTRACT_ANALYZE: process.env.N8N_CONTRACT_ANALYZE_WEBHOOK_URL,
     HEARING_FOLLOWUP: process.env.N8N_HEARING_FOLLOWUP_WEBHOOK_URL,
     CLIENT_STATUS_NOTIFY: process.env.N8N_CLIENT_STATUS_NOTIFY_WEBHOOK_URL,
+    COLLECTION_ASSISTANT: process.env.N8N_COLLECTION_ASSISTANT_WEBHOOK_URL,
   }
 
   const url = urls[type]
@@ -126,6 +128,7 @@ export function getN8nConfigStatus(): Record<N8NWebhookType, boolean> {
     CONTRACT_ANALYZE: isWebhookConfigured('CONTRACT_ANALYZE'),
     HEARING_FOLLOWUP: isWebhookConfigured('HEARING_FOLLOWUP'),
     CLIENT_STATUS_NOTIFY: isWebhookConfigured('CLIENT_STATUS_NOTIFY'),
+    COLLECTION_ASSISTANT: isWebhookConfigured('COLLECTION_ASSISTANT'),
   }
 }
 

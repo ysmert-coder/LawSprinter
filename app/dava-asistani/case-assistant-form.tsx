@@ -2,23 +2,10 @@
 
 import { useState } from 'react'
 import { createClient } from '../../app/supabase'
+import { CaseAssistantResponse } from '../../lib/types/ai'
 
 interface CaseAssistantFormProps {
   userId: string
-}
-
-type CaseAssistantResponse = {
-  eventSummary: string
-  defenceOutline: string
-  actionItems: string[]
-  sources?: {
-    id?: string
-    title?: string
-    court?: string
-    url?: string
-    similarity?: number
-  }[]
-  confidenceScore?: number
 }
 
 export default function CaseAssistantForm({ userId }: CaseAssistantFormProps) {

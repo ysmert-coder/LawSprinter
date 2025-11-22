@@ -26,7 +26,7 @@ export interface ClientMessage {
   firm_id: string
   client_id: string
   direction: 'inbound' | 'outbound'
-  channel: 'whatsapp' | 'telegram' | 'email' | 'portal' | 'sms'
+  channel: 'whatsapp' | 'telegram' | 'email' | 'portal' | 'sms' | 'note'
   message_text: string
   metadata: any
   read_at: string | null
@@ -225,7 +225,7 @@ export async function addClientMessage(
   clientId: string,
   data: {
     direction: 'inbound' | 'outbound'
-    channel: 'whatsapp' | 'telegram' | 'email' | 'portal' | 'sms'
+    channel: 'whatsapp' | 'telegram' | 'email' | 'portal' | 'sms' | 'note'
     message_text: string
     metadata?: any
   }

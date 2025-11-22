@@ -1,622 +1,504 @@
-# 🧠 RAG System Setup - Legal Knowledge Base
+# RAG (Retrieval-Augmented Generation) System
 
-## 📋 Overview
+## Genel Bakış
 
-LawSprinter now includes a **RAG (Retrieval Augmented Generation)** system powered by **pgvector** for semantic search over legal documents and case-specific knowledge.
+LawSprinter'da RAG sistemi, hukuki belgeleri vektör embedding'leri ile saklar ve semantik arama yapar. İki tip doküman vardır:
 
-### What is RAG?
+1. **Public Documents**: Yargıtay kararları, mevzuat, doktrin (tüm kullanıcılar için paylaşımlı)
+2. **Private Documents**: Kullanıcıya/davaya özel belgeler (RLS korumalı)
 
-RAG combines:
-- **Vector embeddings** (semantic representation of text)
-- **Similarity search** (finding relevant content)
-- **AI generation** (using retrieved context to generate responses)
+## 🏗️ Mimari
 
-This enables AI-powered features like:
-- 🔍 Semantic search over Yargıtay decisions
-- 📚 Case law retrieval for case analysis
-- 📄 Private document search within cases
-- 🤖 Context-aware AI responses
+```
+┌─────────────────────────────────────────────────────────┐
+│                    LawSprinter App                      │
+│  ┌─────────────────────┐    ┌────────────────────────┐ │
+│  │  Import Document    │    │   Semantic Search      │ │
+│  │  (API Endpoint)     │    │   (API Endpoint)       │ │
+│  └──────────┬──────────┘    └──────────┬─────────────┘ │
+│             │                           │               │
+│             v                           v               │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │         lib/services/rag.ts                     │   │
+│  │  - importPublicDoc()                            │   │
+│  │  - searchHybridRag()                            │   │
+│  └──────────┬──────────────────────┬────────────────┘  │
+└─────────────┼──────────────────────┼────────────────────┘
+              │                      │
+              v                      v
+    ┌─────────────────┐    ┌──────────────────┐
+    │  n8n Webhook    │    │    Supabase      │
+    │  (Embeddings)   │    │  (pgvector)      │
+    │                 │    │                  │
+    │ - Chunk text    │    │ - rag_public_*   │
+    │ - Generate      │    │ - rag_private_*  │
+    │   embeddings    │    │ - Vector search  │
+    └─────────────────┘    └──────────────────┘
+```
 
----
+## 📊 Database Schema
 
-## 🗄️ Database Schema
-
-### 1. `legal_documents` - Public Legal Knowledge Base
-
-Stores metadata for legal documents (case law, legislation, doctrine).
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | UUID | Primary key |
-| `title` | TEXT | Document title |
-| `source` | TEXT | Source (e.g., 'Yargıtay', 'Kanun', 'Makale') |
-| `doc_type` | TEXT | Type: 'mevzuat', 'içtihat', 'doktrin' |
-| `court` | TEXT | Court name (e.g., 'Yargıtay', 'Danıştay') |
-| `chamber` | TEXT | Chamber (e.g., '9. Hukuk Dairesi') |
-| `decision_no` | TEXT | Decision number (e.g., 'E.2023/1234 K.2023/5678') |
-| `file_no` | TEXT | File number |
-| `date` | DATE | Decision/publication date |
-| `url` | TEXT | Original source URL |
-| `is_active` | BOOLEAN | Soft delete flag |
-| `metadata` | JSONB | Additional flexible metadata |
-| `created_at` | TIMESTAMPTZ | Creation timestamp |
-| `updated_at` | TIMESTAMPTZ | Last update timestamp |
-
-**Indexes:**
-- `idx_legal_documents_doc_type` - Filter by document type
-- `idx_legal_documents_court` - Filter by court
-- `idx_legal_documents_date` - Sort by date
-- `idx_legal_documents_source` - Filter by source
-
-### 2. `legal_chunks` - Chunked Content with Embeddings
-
-Stores text chunks with vector embeddings for semantic search.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | BIGSERIAL | Primary key |
-| `document_id` | UUID | Foreign key to `legal_documents` |
-| `chunk_index` | INTEGER | Order of chunk in document (0, 1, 2, ...) |
-| `content` | TEXT | The actual text chunk |
-| `embedding` | vector(1536) | OpenAI/DeepSeek embedding (1536 dimensions) |
-| `created_at` | TIMESTAMPTZ | Creation timestamp |
-
-**Indexes:**
-- `idx_legal_chunks_document_id` - Join with documents
-- `idx_legal_chunks_embedding` - IVFFlat index for vector similarity search (cosine distance)
-
-### 3. `private_case_chunks` - Private Case-Specific Knowledge
-
-Stores user-uploaded content specific to cases (isolated by RLS).
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | BIGSERIAL | Primary key |
-| `user_id` | UUID | Foreign key to `auth.users` |
-| `case_id` | UUID | Foreign key to `cases` |
-| `source` | TEXT | Source type: 'uploaded_file', 'note', 'email', 'transcript' |
-| `content` | TEXT | The actual text chunk |
-| `embedding` | vector(1536) | OpenAI/DeepSeek embedding (1536 dimensions) |
-| `created_at` | TIMESTAMPTZ | Creation timestamp |
-
-**Indexes:**
-- `idx_private_case_chunks_user_case` - Composite index for user + case queries
-- `idx_private_case_chunks_embedding` - IVFFlat index for vector similarity search
-
----
-
-## 🔐 Row Level Security (RLS)
-
-### `legal_documents` & `legal_chunks`
-- ✅ **Public read access** - All authenticated users can search
-- ⚠️ **Insert/update** - Currently allowed for all authenticated users (TODO: restrict to admin role)
-
-### `private_case_chunks`
-- 🔒 **Firm-isolated** - Users can only access chunks from their firm's cases
-- ✅ **User-owned** - Users can insert/delete their own chunks
-- ✅ **Firm-shared** - Firm members can view each other's case chunks
-
----
-
-## 🛠️ Installation
-
-### 1. Run the Migration
-
-In Supabase SQL Editor, run:
+### Public Documents
 
 ```sql
--- Run the migration
-supabase/migrations/004_rag_legal_knowledge.sql
+-- rag_public_docs: Metadata
+CREATE TABLE rag_public_docs (
+  id UUID PRIMARY KEY,
+  title TEXT NOT NULL,
+  doc_type TEXT NOT NULL,  -- 'mevzuat', 'ictihat', 'doktrin'
+  court TEXT,              -- Yargıtay 9. HD, etc.
+  date DATE,               -- Decision/publication date
+  url TEXT,                -- Link to source
+  raw_text TEXT NOT NULL,  -- Full document text
+  metadata JSONB,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+
+-- rag_public_chunks: Vector embeddings
+CREATE TABLE rag_public_chunks (
+  id UUID PRIMARY KEY,
+  doc_id UUID REFERENCES rag_public_docs(id),
+  chunk_index INTEGER NOT NULL,
+  chunk_text TEXT NOT NULL,
+  embedding vector(1536),  -- OpenAI ada-002
+  created_at TIMESTAMPTZ
+);
 ```
 
-This will:
-- ✅ Enable pgvector extension
-- ✅ Create 3 new tables
-- ✅ Create indexes for performance
-- ✅ Set up RLS policies
-- ✅ Create helper functions for semantic search
-
-### 2. Verify Installation
+### Private Documents
 
 ```sql
--- Check if pgvector is enabled
-SELECT * FROM pg_extension WHERE extname = 'vector';
+-- rag_private_docs: Metadata (RLS protected)
+CREATE TABLE rag_private_docs (
+  id UUID PRIMARY KEY,
+  firm_id UUID REFERENCES firms(id),
+  case_id UUID REFERENCES cases(id),
+  title TEXT NOT NULL,
+  raw_text TEXT NOT NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
 
--- Check tables
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
-AND table_name IN ('legal_documents', 'legal_chunks', 'private_case_chunks');
-
--- Check functions
-SELECT routine_name FROM information_schema.routines 
-WHERE routine_schema = 'public' 
-AND routine_name IN ('search_legal_documents', 'search_private_case_chunks');
+-- rag_private_chunks: Vector embeddings (RLS protected)
+CREATE TABLE rag_private_chunks (
+  id UUID PRIMARY KEY,
+  doc_id UUID REFERENCES rag_private_docs(id),
+  firm_id UUID REFERENCES firms(id),
+  chunk_index INTEGER NOT NULL,
+  chunk_text TEXT NOT NULL,
+  embedding vector(1536),
+  created_at TIMESTAMPTZ
+);
 ```
 
----
+## 🔧 Setup
 
-## 📚 TypeScript Types
+### 1. Database Migration
 
-All types are auto-generated in `types/database.ts`:
+Migration dosyası zaten oluşturuldu: `supabase/migrations/006_rag_system.sql`
 
-```typescript
-import { 
-  LegalDocument, 
-  LegalChunk, 
-  PrivateCaseChunk,
-  LegalSearchResult,
-  PrivateCaseSearchResult
-} from '@/types/database'
+Supabase'e uygulama:
+
+```bash
+# Local development
+supabase db reset
+
+# Production
+supabase db push
 ```
 
----
+### 2. n8n Embeddings Webhook
 
-## 🔧 Service Layer API
+n8n'de bir "generate-embeddings" workflow'u oluşturun:
 
-All RAG functions are in `src/lib/services/rag.ts`.
-
-### Legal Documents (Public Knowledge Base)
-
-#### Insert Document with Chunks
-
-```typescript
-import { insertLegalDocumentWithChunks } from '@/lib/services/rag'
-
-const document = await insertLegalDocumentWithChunks(
-  {
-    title: 'Yargıtay 9. HD E.2023/1234 K.2023/5678',
-    source: 'Yargıtay',
-    docType: 'içtihat',
-    court: 'Yargıtay',
-    chamber: '9. Hukuk Dairesi',
-    decisionNo: 'E.2023/1234 K.2023/5678',
-    date: '2023-06-15',
-    url: 'https://kazanci.com/...',
-    metadata: { keywords: ['kıdem tazminatı', 'iş hukuku'] }
-  },
-  [
-    { 
-      content: 'Chunk 1 text...', 
-      chunkIndex: 0, 
-      embedding: [0.1, 0.2, ...] // 1536-dim array from n8n
-    },
-    { 
-      content: 'Chunk 2 text...', 
-      chunkIndex: 1, 
-      embedding: [0.3, 0.4, ...] 
-    }
-  ]
-)
-```
-
-#### Search Legal Documents
-
-```typescript
-import { searchLegalDocuments } from '@/lib/services/rag'
-
-const results = await searchLegalDocuments(
-  [0.1, 0.2, ...], // query embedding from n8n (1536-dim)
-  {
-    matchCount: 5,
-    docType: 'içtihat',
-    court: 'Yargıtay'
-  }
-)
-
-// Results include:
-// - document_id, chunk_id
-// - title, source, doc_type, court, chamber, decision_no
-// - content (the matching chunk text)
-// - similarity (0-1, higher is better)
-```
-
-#### Get Document with Chunks
-
-```typescript
-import { getLegalDocumentWithChunks } from '@/lib/services/rag'
-
-const doc = await getLegalDocumentWithChunks('document-uuid')
-// Returns: { ...document, chunks: [...] }
-```
-
-#### Deactivate Document
-
-```typescript
-import { deactivateLegalDocument } from '@/lib/services/rag'
-
-await deactivateLegalDocument('document-uuid')
-// Soft delete (sets is_active = false)
-```
-
-### Private Case Chunks
-
-#### Insert Private Chunks
-
-```typescript
-import { insertPrivateCaseChunks } from '@/lib/services/rag'
-
-const chunkIds = await insertPrivateCaseChunks(
-  'user-uuid',
-  'case-uuid',
-  [
-    { 
-      content: 'Meeting notes from 2023-06-15...', 
-      source: 'note', 
-      embedding: [0.1, 0.2, ...] 
-    },
-    { 
-      content: 'Email from client...', 
-      source: 'email', 
-      embedding: [0.3, 0.4, ...] 
-    }
-  ]
-)
-```
-
-#### Search Private Chunks
-
-```typescript
-import { searchPrivateCaseChunks } from '@/lib/services/rag'
-
-const results = await searchPrivateCaseChunks(
-  'user-uuid',
-  'case-uuid',
-  [0.1, 0.2, ...], // query embedding from n8n
-  5 // match count
-)
-
-// Results include:
-// - chunk_id
-// - source, content
-// - similarity (0-1)
-// - created_at
-```
-
-#### Get All Private Chunks
-
-```typescript
-import { getPrivateCaseChunks } from '@/lib/services/rag'
-
-const chunks = await getPrivateCaseChunks('user-uuid', 'case-uuid')
-```
-
-#### Delete Private Chunks
-
-```typescript
-import { deletePrivateCaseChunks, deleteAllPrivateCaseChunks } from '@/lib/services/rag'
-
-// Delete specific chunks
-await deletePrivateCaseChunks('user-uuid', [1, 2, 3])
-
-// Delete all chunks for a case
-await deleteAllPrivateCaseChunks('user-uuid', 'case-uuid')
-```
-
-### Hybrid Search (Public + Private)
-
-```typescript
-import { hybridSearch } from '@/lib/services/rag'
-
-const { publicResults, privateResults } = await hybridSearch(
-  'user-uuid',
-  'case-uuid',
-  [0.1, 0.2, ...], // query embedding
-  {
-    publicMatchCount: 3,
-    privateMatchCount: 2,
-    docType: 'içtihat',
-    court: 'Yargıtay'
-  }
-)
-
-// Use both results for AI context
-```
-
-### Statistics
-
-```typescript
-import { getRagStatistics } from '@/lib/services/rag'
-
-const stats = await getRagStatistics()
-// Returns:
-// - totalDocuments, totalChunks, totalPrivateChunks
-// - documentsByType: [{ doc_type, count }]
-// - documentsByCourt: [{ court, count }]
-```
-
----
-
-## 🤖 n8n Integration
-
-### Workflow: Generate Embeddings
-
-Create an n8n workflow to generate embeddings using DeepSeek/OpenAI:
-
-```
-1. HTTP Request (Receive document text)
-2. Split Text into Chunks (500-1000 tokens each)
-3. For Each Chunk:
-   - Call DeepSeek/OpenAI Embedding API
-   - Store embedding (1536-dim array)
-4. HTTP Response (Return chunks with embeddings)
-```
-
-### Example n8n Workflow
-
+**Input Payload**:
 ```json
 {
-  "nodes": [
+  "text": "Long document text...",
+  "docId": "uuid or null",
+  "scope": "public|private|query"
+}
+```
+
+**Expected Output**:
+```json
+{
+  "chunks": [
     {
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "parameters": {
-        "path": "generate-embeddings"
-      }
+      "chunk_index": 0,
+      "chunk_text": "First chunk of text...",
+      "embedding": [0.123, -0.456, 0.789, ...]  // 1536 dimensions
     },
     {
-      "name": "Split Text",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "jsCode": "// Split text into chunks of ~500 tokens\nconst text = $input.item.json.text;\nconst chunkSize = 500;\nconst chunks = [];\n\nfor (let i = 0; i < text.length; i += chunkSize) {\n  chunks.push({\n    content: text.slice(i, i + chunkSize),\n    chunkIndex: Math.floor(i / chunkSize)\n  });\n}\n\nreturn chunks.map(chunk => ({ json: chunk }));"
-      }
-    },
-    {
-      "name": "OpenAI Embeddings",
-      "type": "n8n-nodes-base.openAi",
-      "parameters": {
-        "resource": "embedding",
-        "text": "={{ $json.content }}",
-        "model": "text-embedding-ada-002"
-      }
-    },
-    {
-      "name": "Format Response",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "jsCode": "return [{\n  json: {\n    content: $json.content,\n    chunkIndex: $json.chunkIndex,\n    embedding: $json.embedding\n  }\n}];"
-      }
-    },
-    {
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook"
+      "chunk_index": 1,
+      "chunk_text": "Second chunk of text...",
+      "embedding": [0.234, -0.567, 0.890, ...]
     }
   ]
 }
 ```
 
-### Call from Next.js API Route
+**Suggested n8n Workflow**:
 
-```typescript
-// app/api/rag/embed/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+1. **Webhook Trigger** - Receive payload
+2. **Function (JS)** - Split text into chunks (~500 tokens each)
+3. **OpenAI Embeddings Node** (or Ollama) - Generate embeddings for each chunk
+4. **Function (JS)** - Format response
+5. **Respond to Webhook** - Return chunks array
 
-export async function POST(request: NextRequest) {
-  const { text } = await request.json()
+**Example Chunking Logic**:
+```javascript
+const text = $input.item.json.text;
+const chunkSize = 500; // tokens (roughly 2000 characters)
+const overlap = 50;    // token overlap between chunks
 
-  // Call n8n webhook to generate embeddings
-  const response = await fetch(process.env.N8N_EMBEDDINGS_WEBHOOK_URL!, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  })
+// Simple chunking by characters (improve with tiktoken for production)
+const chunks = [];
+const textLength = text.length;
+const chunkCharSize = chunkSize * 4; // rough estimate
+const overlapCharSize = overlap * 4;
 
-  const chunks = await response.json()
-  // chunks = [{ content, chunkIndex, embedding: [0.1, 0.2, ...] }]
-
-  return NextResponse.json({ chunks })
-}
-```
-
----
-
-## 📊 Use Cases
-
-### 1. AI Case Assistant with RAG
-
-```typescript
-// app/api/case-assistant-rag/route.ts
-import { hybridSearch } from '@/lib/services/rag'
-import { callN8NWebhook } from '@/lib/n8n'
-
-export async function POST(request: Request) {
-  const { userId, caseId, query } = await request.json()
-
-  // 1. Generate embedding for user query
-  const { embedding } = await callN8NWebhook(
-    process.env.N8N_EMBEDDINGS_WEBHOOK_URL!,
-    { text: query }
-  )
-
-  // 2. Search both public and private knowledge
-  const { publicResults, privateResults } = await hybridSearch(
-    userId,
-    caseId,
-    embedding,
-    { publicMatchCount: 3, privateMatchCount: 2 }
-  )
-
-  // 3. Build context for AI
-  const context = [
-    ...publicResults.map(r => `[Yargıtay] ${r.title}: ${r.content}`),
-    ...privateResults.map(r => `[Case Note] ${r.content}`)
-  ].join('\n\n')
-
-  // 4. Call AI with context
-  const aiResponse = await callN8NWebhook(
-    process.env.N8N_CASE_ASSISTANT_WEBHOOK_URL!,
-    { query, context }
-  )
-
-  return Response.json({ response: aiResponse })
-}
-```
-
-### 2. Legal Document Upload & Indexing
-
-```typescript
-// app/api/rag/upload-document/route.ts
-import { insertLegalDocumentWithChunks } from '@/lib/services/rag'
-import { callN8NWebhook } from '@/lib/n8n'
-
-export async function POST(request: Request) {
-  const { title, source, docType, text } = await request.json()
-
-  // 1. Generate embeddings via n8n
-  const { chunks } = await callN8NWebhook(
-    process.env.N8N_EMBEDDINGS_WEBHOOK_URL!,
-    { text }
-  )
-
-  // 2. Insert document with chunks
-  const document = await insertLegalDocumentWithChunks(
-    { title, source, docType },
-    chunks
-  )
-
-  return Response.json({ documentId: document.id })
-}
-```
-
-### 3. Case File Upload & Private Indexing
-
-```typescript
-// app/api/cases/[id]/upload-file/route.ts
-import { insertPrivateCaseChunks } from '@/lib/services/rag'
-import { callN8NWebhook } from '@/lib/n8n'
-
-export async function POST(request: Request) {
-  const { userId, caseId, fileText, source } = await request.json()
-
-  // 1. Generate embeddings via n8n
-  const { chunks } = await callN8NWebhook(
-    process.env.N8N_EMBEDDINGS_WEBHOOK_URL!,
-    { text: fileText }
-  )
-
-  // 2. Insert private chunks
-  const chunkIds = await insertPrivateCaseChunks(
-    userId,
-    caseId,
-    chunks.map(c => ({ ...c, source }))
-  )
-
-  return Response.json({ chunkIds })
-}
-```
-
----
-
-## 🚀 Performance Optimization
-
-### IVFFlat Index Tuning
-
-The `lists` parameter in the IVFFlat index affects performance:
-
-```sql
--- For < 1M rows: lists = rows / 1000
--- For 100K rows: lists = 100
--- For 1M rows: lists = 1000
-
-CREATE INDEX idx_legal_chunks_embedding 
-  ON public.legal_chunks USING ivfflat (embedding vector_cosine_ops)
-  WITH (lists = 100);
-```
-
-### Query Performance
-
-- **Cosine distance** (`<=>`) is used for similarity
-- **Similarity score** = `1 - cosine_distance` (0-1, higher is better)
-- **Typical threshold**: 0.7+ for good matches
-
----
-
-## 📈 Monitoring
-
-### Check Index Usage
-
-```sql
-SELECT 
-  schemaname, 
-  tablename, 
-  indexname, 
-  idx_scan, 
-  idx_tup_read, 
-  idx_tup_fetch
-FROM pg_stat_user_indexes
-WHERE indexname LIKE '%embedding%';
-```
-
-### Check Table Sizes
-
-```sql
-SELECT 
-  schemaname, 
-  tablename, 
-  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
-FROM pg_tables
-WHERE tablename IN ('legal_documents', 'legal_chunks', 'private_case_chunks');
-```
-
----
-
-## 🔄 Migration Path
-
-### From Existing System
-
-If you already have legal documents in your system:
-
-1. **Extract text** from existing documents
-2. **Generate embeddings** via n8n
-3. **Bulk insert** using `insertLegalDocumentWithChunks`
-
-```typescript
-// Example bulk migration script
-import { insertLegalDocumentWithChunks } from '@/lib/services/rag'
-
-async function migrateExistingDocuments() {
-  const documents = await getExistingDocuments() // Your existing data
-
-  for (const doc of documents) {
-    // Generate embeddings via n8n
-    const { chunks } = await generateEmbeddings(doc.text)
-
-    // Insert into RAG system
-    await insertLegalDocumentWithChunks(
-      {
-        title: doc.title,
-        source: doc.source,
-        docType: doc.type,
-        // ... other fields
-      },
-      chunks
-    )
+for (let i = 0; i < textLength; i += (chunkCharSize - overlapCharSize)) {
+  const chunk = text.slice(i, i + chunkCharSize);
+  if (chunk.trim()) {
+    chunks.push({
+      chunk_index: chunks.length,
+      chunk_text: chunk.trim()
+    });
   }
 }
+
+return chunks.map(chunk => ({ json: chunk }));
 ```
 
----
+### 3. Environment Variables
 
-## 🎯 Next Steps
+`.env.local` dosyasına ekleyin:
 
-1. ✅ **Run migration** - `004_rag_legal_knowledge.sql`
-2. ✅ **Create n8n embedding workflow**
-3. ✅ **Test with sample documents**
-4. 🔄 **Integrate with existing AI workflows**
-5. 🔄 **Build UI for document upload**
-6. 🔄 **Add monitoring dashboard**
+```bash
+# RAG Embeddings Webhook
+N8N_EMBEDDINGS_WEBHOOK_URL=http://localhost:5678/webhook/generate-embeddings
+```
 
----
+### 4. Restart Application
 
-## 📚 Resources
+```bash
+npm run dev
+```
 
-- [pgvector Documentation](https://github.com/pgvector/pgvector)
-- [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings)
-- [DeepSeek API](https://platform.deepseek.com/docs)
-- [RAG Best Practices](https://www.pinecone.io/learn/retrieval-augmented-generation/)
+## 📚 API Usage
 
----
+### Import Public Document
 
-**Made with ❤️ for LawSprinter**
+**Endpoint**: `POST /api/rag/import-public`
 
-*Semantic search powered by pgvector + DeepSeek*
+**Request**:
+```json
+{
+  "title": "Yargıtay 9. HD, 2022/5678 E., 2023/1234 K.",
+  "docType": "ictihat",
+  "court": "Yargıtay 9. Hukuk Dairesi",
+  "date": "2023-03-15",
+  "url": "https://karararama.yargitay.gov.tr/...",
+  "rawText": "DAVA: Taraflar arasındaki alacak davasından dolayı yapılan yargılama sonunda..."
+}
+```
 
+**Response (Success - 200)**:
+```json
+{
+  "docId": "uuid",
+  "message": "Document imported successfully"
+}
+```
+
+**Response (Error - 400)**:
+```json
+{
+  "error": "title is required"
+}
+```
+
+**Response (Error - 500)**:
+```json
+{
+  "error": "Failed to generate embeddings: No chunks returned"
+}
+```
+
+### Hybrid Search
+
+**Endpoint**: `POST /api/rag/search`
+
+**Request**:
+```json
+{
+  "query": "İş sözleşmesinin haklı nedenle feshi durumunda işçinin hakları nelerdir?",
+  "limit": 10
+}
+```
+
+**Response (Success - 200)**:
+```json
+{
+  "publicChunks": [
+    {
+      "docId": "uuid",
+      "title": "Yargıtay 9. HD, 2022/5678",
+      "docType": "ictihat",
+      "court": "Yargıtay 9. Hukuk Dairesi",
+      "date": "2023-03-15",
+      "url": "https://...",
+      "chunkText": "İş sözleşmesinin haklı nedenle feshi...",
+      "similarity": 0.92
+    }
+  ],
+  "privateChunks": [
+    {
+      "docId": "uuid",
+      "title": "Müvekkil Dilekçesi - Ahmet Yılmaz",
+      "caseId": "uuid",
+      "chunkText": "Müvekkilim 5 yıl boyunca...",
+      "similarity": 0.87
+    }
+  ]
+}
+```
+
+## 🔍 Service Layer Usage
+
+### Import Document (TypeScript)
+
+```typescript
+import { importPublicDoc } from '@/lib/services/rag'
+
+const result = await importPublicDoc({
+  title: 'Yargıtay 9. HD, 2022/5678',
+  docType: 'ictihat',
+  court: 'Yargıtay 9. Hukuk Dairesi',
+  date: '2023-03-15',
+  url: 'https://karararama.yargitay.gov.tr/...',
+  rawText: 'DAVA: Taraflar arasındaki...',
+})
+
+console.log('Imported document ID:', result.docId)
+```
+
+### Semantic Search (TypeScript)
+
+```typescript
+import { searchHybridRag } from '@/lib/services/rag'
+
+const results = await searchHybridRag({
+  userId: user.id,
+  query: 'İş sözleşmesinin haklı nedenle feshi',
+  limit: 10,
+})
+
+console.log('Public chunks:', results.publicChunks.length)
+console.log('Private chunks:', results.privateChunks.length)
+
+// Use in AI prompt
+const context = results.publicChunks
+  .map(chunk => `[${chunk.court}] ${chunk.chunkText}`)
+  .join('\n\n')
+```
+
+## 🎯 Integration with AI Features
+
+### Draft Generator with RAG
+
+```typescript
+// In Draft Generator n8n workflow or service
+import { searchHybridRag } from '@/lib/services/rag'
+
+// 1. Search for relevant precedents
+const ragResults = await searchHybridRag({
+  userId: user.id,
+  query: factSummary + ' ' + caseType,
+  limit: 5,
+})
+
+// 2. Build context from top results
+const legalContext = ragResults.publicChunks
+  .slice(0, 3)
+  .map(chunk => ({
+    source: `${chunk.court} - ${chunk.title}`,
+    text: chunk.chunkText,
+    similarity: chunk.similarity,
+  }))
+
+// 3. Include in AI prompt
+const prompt = `
+Sen deneyimli bir Türk avukatısın. Aşağıdaki bilgilere dayanarak bir ${draftType} hazırla.
+
+Dava Türü: ${caseType}
+Olay Özeti: ${factSummary}
+
+İlgili Emsal Kararlar:
+${legalContext.map(c => `- ${c.source}\n  ${c.text}`).join('\n\n')}
+
+Dilekçeyi hazırla...
+`
+
+// 4. Return sources in response
+return {
+  draftText: aiGeneratedText,
+  usedSources: legalContext.map(c => ({
+    title: c.source,
+    court: chunk.court,
+    url: chunk.url,
+    similarity: c.similarity,
+  })),
+}
+```
+
+### Draft Reviewer with RAG
+
+```typescript
+// In Draft Reviewer n8n workflow or service
+import { searchHybridRag } from '@/lib/services/rag'
+
+// 1. Extract key legal terms from draft
+const keyTerms = extractLegalTerms(draftText) // Your logic
+
+// 2. Search for relevant precedents
+const ragResults = await searchHybridRag({
+  userId: user.id,
+  query: keyTerms.join(' '),
+  limit: 5,
+})
+
+// 3. Suggest missing citations
+const suggestedCitations = ragResults.publicChunks
+  .filter(chunk => !draftText.includes(chunk.title))
+  .slice(0, 3)
+  .map(chunk => ({
+    title: chunk.title,
+    court: chunk.court,
+    url: chunk.url,
+    similarity: chunk.similarity,
+  }))
+
+return {
+  issues: [...],
+  suggestions: [...],
+  suggestedCitations: suggestedCitations,
+}
+```
+
+## 🔒 Security & RLS
+
+### Public Documents
+- **Read**: Everyone (authenticated users)
+- **Write**: Admin only (not implemented in API yet)
+
+### Private Documents
+- **Read**: Only users from same firm (RLS enforced)
+- **Write**: Only users from same firm (RLS enforced)
+
+RLS policies are automatically enforced by Supabase.
+
+## 📈 Performance
+
+### Vector Search
+- Uses **IVFFlat** index for fast approximate nearest neighbor search
+- Cosine similarity metric
+- Typical search time: 50-200ms for 10k documents
+
+### Optimization Tips
+1. **Chunk Size**: 500 tokens (~2000 chars) is optimal
+2. **Overlap**: 50 tokens prevents context loss
+3. **Index Tuning**: Adjust `lists` parameter based on document count
+   - 100 lists for 10k-100k documents
+   - 1000 lists for 100k-1M documents
+
+## 🧪 Testing
+
+### Test Import
+
+```bash
+curl -X POST http://localhost:3000/api/rag/import-public \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "title": "Test Yargıtay Kararı",
+    "docType": "ictihat",
+    "court": "Yargıtay 9. HD",
+    "date": "2023-01-01",
+    "url": "https://example.com",
+    "rawText": "Bu bir test kararıdır. İş hukuku ile ilgili önemli bir karardır. İşçinin hakları korunmalıdır."
+  }'
+```
+
+### Test Search
+
+```bash
+curl -X POST http://localhost:3000/api/rag/search \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "query": "işçinin hakları",
+    "limit": 5
+  }'
+```
+
+## 🐛 Troubleshooting
+
+### "Failed to generate embeddings"
+- Check n8n webhook is active
+- Verify `N8N_EMBEDDINGS_WEBHOOK_URL` is correct
+- Check n8n execution logs
+
+### "No chunks returned"
+- Text might be too short (min ~100 characters)
+- Check chunking logic in n8n workflow
+- Verify OpenAI API key is valid
+
+### "Vector search returns no results"
+- Ensure embeddings were generated correctly
+- Check vector dimension matches (1536 for ada-002)
+- Verify IVFFlat index is created
+
+### RLS blocking private search
+- Ensure user has valid `firm_id` in profiles table
+- Check RLS policies are enabled
+- Verify user is authenticated
+
+## 🚀 Future Enhancements
+
+- [ ] Bulk import API
+- [ ] Private document import API
+- [ ] Document update/delete APIs
+- [ ] Metadata filtering (by date, court, type)
+- [ ] Hybrid search with keyword + semantic
+- [ ] Re-ranking with cross-encoder
+- [ ] Document versioning
+- [ ] Admin UI for public document management
+- [ ] Analytics (most searched terms, popular documents)
+
+## 📝 Key Features
+
+✅ **Automatic Embedding Generation**: n8n webhook handles chunking and embedding  
+✅ **Hybrid Search**: Searches both public and private documents  
+✅ **Metadata Rich**: Court, date, URL, document type  
+✅ **RLS Protected**: Private documents secured by firm_id  
+✅ **Similarity Scores**: Cosine similarity for ranking  
+✅ **Type Safe**: Full TypeScript support  
+✅ **Error Handling**: Graceful rollback on failures  
+
+## 🎉 Summary
+
+RAG sistemi artık tamamen entegre:
+
+1. ✅ Database migration (`006_rag_system.sql`)
+2. ✅ Service layer (`lib/services/rag.ts`)
+3. ✅ API endpoints (`/api/rag/import-public`, `/api/rag/search`)
+4. ✅ n8n webhook integration (`EMBEDDINGS`)
+5. ✅ Type definitions
+6. ✅ RLS security
+7. ✅ Documentation
+
+**Tek yapmanız gereken**: n8n'de embeddings workflow'unu oluşturup webhook URL'i environment variable olarak eklemek! 🚀

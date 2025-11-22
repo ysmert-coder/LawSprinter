@@ -757,3 +757,156 @@ export type PrivateCaseChunk = Tables<'private_case_chunks'>
 // Vector search result types
 export type LegalSearchResult = Database['public']['Functions']['search_legal_documents']['Returns'][0]
 export type PrivateCaseSearchResult = Database['public']['Functions']['search_private_case_chunks']['Returns'][0]
+
+// Accounting types
+export interface Invoice {
+  id: string
+  firm_id: string
+  user_id?: string | null
+  case_id?: string | null
+  client_id?: string | null
+  invoice_number?: string | null
+  description: string
+  amount: number
+  currency: 'TRY' | 'USD' | 'EUR' | 'GBP'
+  status: 'draft' | 'sent' | 'partial' | 'paid' | 'overdue' | 'cancelled'
+  due_date?: string | null
+  issued_at?: string | null
+  paid_at?: string | null
+  notes?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Payment {
+  id: string
+  firm_id: string
+  user_id?: string | null
+  invoice_id: string
+  amount: number
+  payment_method?: 'cash' | 'bank_transfer' | 'credit_card' | 'debit_card' | 'check' | 'eft' | 'other' | null
+  paid_at: string
+  notes?: string | null
+  created_at: string
+}
+
+export interface InvoiceWithRelations extends Invoice {
+  client?: {
+    id: string
+    full_name: string
+    email?: string | null
+  } | null
+  case?: {
+    id: string
+    title: string
+    case_number?: string | null
+  } | null
+  payments?: Payment[]
+}
+
+export interface AccountingSummary {
+  totalReceivable: number
+  monthCollected: number
+  overdueCount: number
+  overdueTotal: number
+}
+
+// Installment types
+export type InstallmentStatus = 'pending' | 'paid' | 'overdue'
+export type Currency = 'TRY' | 'USD' | 'EUR' | 'GBP'
+
+export interface InvoiceInstallment {
+  id: string
+  invoice_id: string
+  user_id: string
+  firm_id: string
+  due_date: string
+  amount: number
+  currency: Currency
+  status: InstallmentStatus
+  paid_at?: string | null
+  note?: string | null
+  created_at: string
+}
+
+export interface InvoiceInstallmentInput {
+  dueDate: string
+  amount: number
+  currency?: Currency
+  note?: string
+}
+
+export interface InstallmentSummary {
+  totalCount: number
+  paidCount: number
+  overdueCount: number
+  totalAmount: number
+  paidAmount: number
+  remainingAmount: number
+}
+
+// Client Messages types
+export type MessageDirection = 'inbound' | 'outbound'
+export type MessageChannel = 'whatsapp' | 'telegram' | 'email' | 'portal' | 'sms' | 'note'
+
+export interface ClientMessage {
+  id: string
+  firm_id: string
+  client_id: string
+  direction: MessageDirection
+  channel: MessageChannel
+  message_text: string
+  metadata?: any
+  read_at?: string | null
+  created_at: string
+}
+
+export interface ClientMessageInput {
+  direction: MessageDirection
+  channel: MessageChannel
+  message_text: string
+  metadata?: any
+}
+
+// Client Profiles types
+export type RiskLevel = 'low' | 'medium' | 'high'
+
+export interface ClientProfile {
+  id: string
+  firm_id: string
+  client_id: string
+  sentiment_score?: number | null // -1 to 1
+  risk_level?: RiskLevel | null
+  communication_style?: string | null
+  emotional_state?: string | null
+  json_profile?: any
+  last_analysis_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ClientProfileInput {
+  sentiment_score?: number
+  risk_level?: RiskLevel
+  communication_style?: string
+  emotional_state?: string
+  json_profile?: any
+}
+
+// Client with relations
+export interface ClientWithDetails {
+  id: string
+  user_id: string
+  firm_id: string
+  full_name: string
+  email?: string | null
+  phone?: string | null
+  whatsapp_number?: string | null
+  notes?: string | null
+  created_at: string
+  updated_at: string
+  profile?: ClientProfile | null
+  open_cases_count?: number
+  total_invoiced?: number
+  total_paid?: number
+}

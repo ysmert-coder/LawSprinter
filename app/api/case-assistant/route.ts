@@ -1,42 +1,32 @@
 /**
  * Case Assistant API Route
  * 
- * Handles case analysis via n8n webhook
+ * Handles case analysis via n8n webhook with RAG integration
  * Analyzes case files and provides:
  * - Event summary
  * - Defence outline
  * - Action items
- * - Relevant case law sources (optional)
+ * - Relevant case law sources (RAG)
+ * - AI confidence score
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '../../../src/lib/supabaseServer'
 import { callN8NWebhook } from '../../../src/lib/n8n'
+import { CaseAssistantRequest, CaseAssistantResponse } from '../../../lib/types/ai'
+import { searchHybridRag } from '../../../lib/services/rag'
 
 /**
- * Request body type
+ * RAG Source for Case Assistant
  */
-type CaseAssistantRequest = {
-  fileUrl: string
-  caseType: string
-  shortDescription?: string
-}
-
-/**
- * n8n response type
- */
-type CaseAssistantResponse = {
-  eventSummary: string
-  defenceOutline: string
-  actionItems: string[]
-  sources?: {
-    id?: string
-    title?: string
-    court?: string
-    url?: string
-    similarity?: number
-  }[]
-  confidenceScore?: number
+export type CaseAssistantSource = {
+  id: string
+  title?: string | null
+  court?: string | null
+  url?: string | null
+  similarity?: number
+  scope: 'public' | 'private'
+  snippet: string
 }
 
 export async function POST(request: NextRequest) {
@@ -68,7 +58,51 @@ export async function POST(request: NextRequest) {
     console.log('[case-assistant] Processing request for user:', user.id)
     console.log('[case-assistant] Case type:', caseType)
 
-    // Call n8n webhook
+    // Step 1: Search for relevant sources via RAG
+    let sources: CaseAssistantSource[] = []
+    
+    try {
+      console.log('[case-assistant] Searching RAG for relevant sources...')
+      
+      const ragResults = await searchHybridRag({
+        userId: user.id,
+        query: shortDescription || 'Genel dava analizi',
+        limit: 8,
+      })
+
+      // Combine public and private chunks into sources array
+      sources = [
+        ...ragResults.publicChunks.map((chunk) => ({
+          id: chunk.docId,
+          title: chunk.title,
+          court: chunk.court,
+          url: chunk.url,
+          similarity: chunk.similarity,
+          scope: 'public' as const,
+          snippet: chunk.chunkText.substring(0, 400) + (chunk.chunkText.length > 400 ? '...' : ''),
+        })),
+        ...ragResults.privateChunks.map((chunk) => ({
+          id: chunk.docId,
+          title: chunk.title,
+          court: null,
+          url: null,
+          similarity: chunk.similarity,
+          scope: 'private' as const,
+          snippet: chunk.chunkText.substring(0, 400) + (chunk.chunkText.length > 400 ? '...' : ''),
+        })),
+      ]
+
+      // Sort by similarity (highest first)
+      sources.sort((a, b) => (b.similarity || 0) - (a.similarity || 0))
+
+      console.log('[case-assistant] Found', sources.length, 'relevant sources from RAG')
+    } catch (ragError: any) {
+      console.error('[case-assistant] RAG search failed, continuing without sources:', ragError.message)
+      // Continue with empty sources array
+      sources = []
+    }
+
+    // Step 2: Call n8n webhook with sources
     const result = await callN8NWebhook<CaseAssistantResponse>(
       'CASE_ASSISTANT',
       {
@@ -76,6 +110,7 @@ export async function POST(request: NextRequest) {
         caseType,
         shortDescription: shortDescription ?? null,
         fileUrl,
+        sources,
       }
     )
 

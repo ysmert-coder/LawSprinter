@@ -6,6 +6,7 @@
  */
 
 import { callN8NWebhook } from '@/lib/n8n'
+import { DraftGeneratorRequest, DraftGeneratorResponse, DraftReviewRequest, DraftReviewResponse } from '@/lib/types/ai'
 
 /**
  * Case Assistant AI Response
@@ -189,6 +190,50 @@ export async function generatePaymentReminderWithAI(payload: {
   } catch (error) {
     console.error('[generatePaymentReminderWithAI] Error:', error)
     throw new Error('Ödeme hatırlatma mesajı oluşturma sırasında bir hata oluştu.')
+  }
+}
+
+/**
+ * Generate legal draft with AI
+ * 
+ * @param payload Draft generation request
+ * @returns AI-generated legal draft
+ */
+export async function generateDraft(
+  payload: DraftGeneratorRequest & { userId: string }
+): Promise<DraftGeneratorResponse> {
+  try {
+    const response = await callN8NWebhook<DraftGeneratorResponse>('DRAFT_GENERATOR', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    })
+
+    return response
+  } catch (error) {
+    console.error('[generateDraft] Error:', error)
+    throw new Error('Dilekçe taslağı oluşturma sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+  }
+}
+
+/**
+ * Review legal draft with AI
+ * 
+ * @param payload Draft review request
+ * @returns AI-generated review and suggestions
+ */
+export async function reviewDraft(
+  payload: DraftReviewRequest & { userId: string }
+): Promise<DraftReviewResponse> {
+  try {
+    const response = await callN8NWebhook<DraftReviewResponse>('DRAFT_REVIEWER', {
+      ...payload,
+      timestamp: new Date().toISOString(),
+    })
+
+    return response
+  } catch (error) {
+    console.error('[reviewDraft] Error:', error)
+    throw new Error('Taslak inceleme sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
   }
 }
 

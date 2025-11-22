@@ -278,11 +278,33 @@ lawsprinter/
 
 Proje n8n webhook entegrasyonu için hazır:
 
-- **Sözleşme Analizi:** `/api/contracts/analyze` endpoint'i
-- **Duruşma Takibi:** Webhook hazır (gelecek özellik)
-- **Müvekkil Bildirimleri:** Webhook hazır (gelecek özellik)
+- **Dava Asistanı (CASE_ASSISTANT):** `/api/case-assistant` - Dosya analizi ve savunma stratejisi
+- **Strateji Merkezi (STRATEGY):** `/api/strategy` - Alan bazlı hukuki strateji önerileri
+- **Müşteri Profili (CLIENT_PROFILE):** `/api/clients/[id]/messages` - İletişim analizi
+- **Tahsilat Asistanı (COLLECTION_ASSISTANT):** `/api/accounting/collection-assistant` - Ödeme hatırlatma mesajları
+- **Sözleşme Analizi (CONTRACT_ANALYZE):** `/api/contracts/analyze` - Sözleşme risk analizi
+- **Duruşma Takibi (HEARING_FOLLOWUP):** Webhook hazır (gelecek özellik)
+- **Müvekkil Bildirimleri (CLIENT_STATUS_NOTIFY):** Webhook hazır (gelecek özellik)
 
-**Not:** Tüm mesajlar avukat onayı ile gönderilir. Otomatik gönderim yapılmaz.
+**RAG (Retrieval-Augmented Generation) Desteği:**
+
+CASE_ASSISTANT ve STRATEGY webhook'ları RAG sistemi ile entegre edilebilir:
+- `sources`: Emsal kararlar ve yasal kaynaklar (Yargıtay kararları, kanunlar)
+- `confidenceScore`: AI güven skoru (0-1 arası)
+- `similarity`: Kaynak benzerlik skoru (vektör araması)
+
+Detaylı bilgi için `N8N_INTEGRATION.md` dosyasına bakın.
+
+**TypeScript Tipleri:**
+
+Tüm AI response tipleri `lib/types/ai.ts` dosyasında tanımlıdır:
+- `LegalSource`: Hukuki kaynak yapısı
+- `CaseAssistantResponse`: Dava asistanı cevap tipi
+- `StrategyResponse`: Strateji cevap tipi
+- `CaseAssistantRequest`: Dava asistanı istek tipi
+- `StrategyRequest`: Strateji istek tipi
+
+**Not:** Tüm AI mesajları taslak niteliğindedir ve avukat onayı gerektirir. Otomatik gönderim yapılmaz.
 
 ### 🎨 UI/UX Özellikleri
 
