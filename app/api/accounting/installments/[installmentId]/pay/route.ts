@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '../../../../../src/lib/supabaseServer'
-import { markInstallmentPaid } from '../../../../../lib/services/accounting'
+import { createClient } from '../../../../../../src/lib/supabaseServer'
+import { markInstallmentPaid } from '../../../../../../lib/services/accounting'
 
 export async function POST(
   request: NextRequest,

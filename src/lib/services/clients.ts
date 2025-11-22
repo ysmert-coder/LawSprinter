@@ -4,7 +4,7 @@
  * Manages client data, messages, and AI-generated profiles
  */
 
-import { createClient } from '../supabaseServer'
+import { createClient as createSupabaseClient } from '../supabaseServer'
 
 export interface Client {
   id: string
@@ -52,7 +52,7 @@ export interface ClientProfile {
  */
 export async function listClientsForUser(userId: string): Promise<Client[]> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -100,7 +100,7 @@ export async function createClient(
   }
 ): Promise<Client> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -140,7 +140,7 @@ export async function createClient(
  */
 export async function getClientById(userId: string, clientId: string): Promise<Client | null> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -184,7 +184,7 @@ export async function getClientMessages(
   limit: number = 100
 ): Promise<ClientMessage[]> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -231,7 +231,7 @@ export async function addClientMessage(
   }
 ): Promise<ClientMessage> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -275,7 +275,7 @@ export async function getClientProfile(
   clientId: string
 ): Promise<ClientProfile | null> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -325,7 +325,7 @@ export async function upsertClientProfile(
   }
 ): Promise<ClientProfile> {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase
@@ -380,7 +380,7 @@ export async function getClientsWithStats(userId: string): Promise<
   >
 > {
   try {
-    const supabase = await createClient()
+    const supabase = await createSupabaseClient()
 
     // Get user's firm_id
     const { data: profile } = await supabase

@@ -36,7 +36,9 @@ N8N_HEARING_FOLLOWUP_WEBHOOK_URL=http://localhost:5678/webhook/hearing-followup
 
 # Client Status Notification - Existing workflow
 N8N_CLIENT_STATUS_NOTIFY_WEBHOOK_URL=http://localhost:5678/webhook/client-status
-```
+
+N8N_EMBEDDINGS_WEBHOOK_URL=http://localhost:5678/webhook/generate-embeddings
+
 
 ## ✅ Oluşturulan n8n Workflow'ları
 
