@@ -1,6 +1,7 @@
 import { createClient } from '../../src/lib/supabaseServer'
 import { redirect } from 'next/navigation'
 import ContractsTable from './contracts-table'
+import AddContractButton from './add-contract-button'
 
 export default async function ContractsPage() {
   const supabase = await createClient()
@@ -62,6 +63,7 @@ export default async function ContractsPage() {
               Sözleşmelerinizi takip edin ve AI ile analiz edin
             </p>
           </div>
+          <AddContractButton cases={cases || []} />
         </div>
       </div>
 
