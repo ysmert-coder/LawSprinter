@@ -24,6 +24,7 @@ export type N8NWebhookType =
   | 'COLLECTION_ASSISTANT'
   | 'DRAFT_REVIEWER'
   | 'EMBEDDINGS'
+  | 'GENERATE_EMBEDDINGS'
   | 'PLEADING_GENERATOR'
   | 'PLEADING_REVIEW'
 
@@ -44,6 +45,7 @@ function getWebhookUrl(type: N8NWebhookType): string {
     COLLECTION_ASSISTANT: process.env.N8N_COLLECTION_ASSISTANT_WEBHOOK_URL,
     DRAFT_REVIEWER: process.env.N8N_DRAFT_REVIEWER_WEBHOOK_URL,
     EMBEDDINGS: process.env.N8N_EMBEDDINGS_WEBHOOK_URL,
+    GENERATE_EMBEDDINGS: process.env.N8N_GENERATE_EMBEDDINGS_WEBHOOK_URL,
     PLEADING_GENERATOR: process.env.N8N_PLEADING_GENERATOR_WEBHOOK_URL,
     PLEADING_REVIEW: process.env.N8N_PLEADING_REVIEW_WEBHOOK_URL,
   }
@@ -152,6 +154,43 @@ export async function triggerHearingFollowup(caseEventId: string): Promise<void>
 export async function triggerClientStatusNotify(caseEventId: string): Promise<void> {
   await callN8NWebhook('CLIENT_STATUS_NOTIFY', {
     caseEventId,
+    timestamp: new Date().toISOString(),
+    source: 'lawsprinter',
+  })
+}
+
+/**
+ * Embeddings Response Type
+ */
+export interface EmbeddingChunk {
+  content: string
+  embedding: number[]
+}
+
+export interface EmbeddingResponse {
+  docId: string
+  chunks: EmbeddingChunk[]
+  totalChunks: number
+  model?: string
+}
+
+/**
+ * Generate embeddings for a document via n8n
+ * 
+ * @param docId - Document ID from public_legal_docs
+ * @param text - Full text content to process
+ * @param isPublic - Whether this is a public document
+ * @returns Embedding response with chunks and vectors
+ */
+export async function callN8NEmbeddings(params: {
+  docId: string
+  text: string
+  isPublic: boolean
+}): Promise<EmbeddingResponse> {
+  return callN8NWebhook<EmbeddingResponse>('GENERATE_EMBEDDINGS', {
+    docId: params.docId,
+    text: params.text,
+    isPublic: params.isPublic,
     timestamp: new Date().toISOString(),
     source: 'lawsprinter',
   })

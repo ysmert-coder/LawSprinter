@@ -385,3 +385,158 @@ export function mapHybridResultToSources(hybridResult: HybridSearchResult): RagS
   return sources
 }
 
+// =====================================================
+// ADMIN: PUBLIC DOCUMENT IMPORT
+// =====================================================
+
+/**
+ * Legal area types for categorization
+ */
+export type LegalArea = 'ceza' | 'borçlar' | 'icra_iflas' | 'medeni' | 'ticaret' | 'anayasa' | 'genel'
+
+/**
+ * Document type for classification
+ */
+export type DocumentType = 'kanun' | 'içtihat' | 'makale' | 'genel'
+
+/**
+ * Create a new public legal document record
+ */
+export async function createPublicLegalDoc(params: {
+  title: string
+  area: LegalArea
+  docType: DocumentType
+  court?: string | null
+  year?: number | null
+  storagePath: string
+  textLength: number
+}): Promise<string> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('public_legal_docs')
+      .insert({
+        title: params.title,
+        area: params.area,
+        doc_type: params.docType,
+        court: params.court,
+        year: params.year,
+        storage_path: params.storagePath,
+        text_length: params.textLength,
+        is_active: true,
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('[createPublicLegalDoc] Error:', error)
+      throw new Error('Doküman kaydedilemedi')
+    }
+
+    return data.id
+  } catch (error) {
+    console.error('[createPublicLegalDoc] Exception:', error)
+    throw error
+  }
+}
+
+/**
+ * Insert embedding chunks from n8n response
+ */
+export async function insertPublicChunksFromEmbeddings(params: {
+  docId: string
+  chunks: Array<{ content: string; embedding: number[] }>
+}): Promise<number> {
+  try {
+    const supabase = await createClient()
+
+    const chunksToInsert = params.chunks.map((chunk, index) => ({
+      doc_id: params.docId,
+      chunk_index: index,
+      content: chunk.content,
+      embedding: chunk.embedding,
+    }))
+
+    const { error } = await supabase
+      .from('public_legal_chunks')
+      .insert(chunksToInsert)
+
+    if (error) {
+      console.error('[insertPublicChunksFromEmbeddings] Error:', error)
+      throw new Error('Chunk\'lar kaydedilemedi')
+    }
+
+    return chunksToInsert.length
+  } catch (error) {
+    console.error('[insertPublicChunksFromEmbeddings] Exception:', error)
+    throw error
+  }
+}
+
+/**
+ * Get document by ID
+ */
+export async function getPublicLegalDocById(docId: string) {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('public_legal_docs')
+      .select('*')
+      .eq('id', docId)
+      .single()
+
+    if (error) {
+      console.error('[getPublicLegalDocById] Error:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('[getPublicLegalDocById] Exception:', error)
+    return null
+  }
+}
+
+/**
+ * List all public legal documents (for admin)
+ */
+export async function listPublicLegalDocs(params?: {
+  limit?: number
+  offset?: number
+  area?: LegalArea
+}) {
+  try {
+    const supabase = await createClient()
+
+    let query = supabase
+      .from('public_legal_docs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+
+    if (params?.area) {
+      query = query.eq('area', params.area)
+    }
+
+    if (params?.limit) {
+      query = query.limit(params.limit)
+    }
+
+    if (params?.offset) {
+      query = query.range(params.offset, params.offset + (params.limit || 20) - 1)
+    }
+
+    const { data, error, count } = await query
+
+    if (error) {
+      console.error('[listPublicLegalDocs] Error:', error)
+      throw new Error('Dokümanlar yüklenemedi')
+    }
+
+    return { documents: data, total: count || 0 }
+  } catch (error) {
+    console.error('[listPublicLegalDocs] Exception:', error)
+    throw error
+  }
+}
