@@ -18,12 +18,6 @@ import { callN8NEmbeddings } from '@/lib/n8n'
 import { parseFile, isValidFileType } from '@/lib/utils/fileParser'
 import { v4 as uuidv4 } from 'uuid'
 
-export const config = {
-  api: {
-    bodyParser: false, // Disable default body parser for file upload
-  },
-}
-
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
