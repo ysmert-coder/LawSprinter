@@ -43,6 +43,9 @@ export default async function DashboardPage() {
 
   const firmId = profile.firm_id
   const userName = profile.full_name || user.email?.split('@')[0] || 'Kullanıcı'
+  
+  // Check if user is admin
+  const isAdmin = user.email === (process.env.ADMIN_EMAIL || 'salihmrtpayoneer@gmail.com')
 
   // Fetch data using service layer
   const [
@@ -100,6 +103,36 @@ export default async function DashboardPage() {
       <div className="mb-6">
         <BillingWidget />
       </div>
+
+      {/* Admin Panel - RAG Import */}
+      {isAdmin && (
+        <div className="mb-6">
+          <Link href="/admin/rag-import">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="bg-white bg-opacity-20 rounded-lg p-3 mr-4">
+                    <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">
+                      🔐 Admin: RAG Bilgi Bankası
+                    </h3>
+                    <p className="text-white text-opacity-90 text-sm">
+                      Hukuk dokümanları yükleyin (PDF, DOCX, TXT) → Otomatik embedding oluşturulsun → AI asistanlarda kullanılsın
+                    </p>
+                  </div>
+                </div>
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Critical Tasks */}
       <div className="mb-6">

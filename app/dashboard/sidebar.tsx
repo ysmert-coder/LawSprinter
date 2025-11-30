@@ -148,11 +148,28 @@ interface SidebarProps {
   userEmail: string
   companyName?: string
   userInitials: string
+  isAdmin?: boolean
 }
 
-export default function Sidebar({ userName, userEmail, companyName, userInitials }: SidebarProps) {
+export default function Sidebar({ userName, userEmail, companyName, userInitials, isAdmin }: SidebarProps) {
   const pathname = usePathname()
   const handleSignOut = useSignOut()
+
+  // Add admin navigation if user is admin
+  const adminNavigation = isAdmin ? [{
+    name: '🔐 RAG İçe Aktar',
+    href: '/admin/rag-import',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+      </svg>
+    ),
+    category: 'admin',
+    badge: 'ADMIN',
+  }] : []
+
+  const allNavigation = [...navigation, ...adminNavigation]
+  const allCategories = isAdmin ? { ...categories, admin: '👑 Admin Panel' } : categories
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-gray-200">
@@ -171,8 +188,8 @@ export default function Sidebar({ userName, userEmail, companyName, userInitials
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-          {Object.entries(categories).map(([categoryKey, categoryLabel]) => {
-            const categoryItems = navigation.filter(item => item.category === categoryKey)
+          {Object.entries(allCategories).map(([categoryKey, categoryLabel]) => {
+            const categoryItems = allNavigation.filter(item => item.category === categoryKey)
             if (categoryItems.length === 0) return null
             
             return (

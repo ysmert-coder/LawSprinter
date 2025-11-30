@@ -18,6 +18,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Kullanıcı'
   const companyName = user.user_metadata?.company_name || ''
   const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+  
+  // Check if user is admin
+  const isAdmin = user.email === (process.env.ADMIN_EMAIL || 'salihmrtpayoneer@gmail.com')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,6 +31,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           userEmail={user.email || ''}
           companyName={companyName}
           userInitials={userInitials}
+          isAdmin={isAdmin}
         />
 
         {/* Main Content */}
