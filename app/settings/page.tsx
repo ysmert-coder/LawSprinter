@@ -113,6 +113,39 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+      {/* AI Settings Link */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 p-6 mb-6">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
+              <svg className="h-6 w-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              AI Ayarları
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Kendi OpenAI/OpenRouter API anahtarınızı kullanarak AI maliyetlerini doğrudan kendi hesabınızdan karşılayın.
+            </p>
+            <ul className="text-xs text-gray-500 space-y-1 mb-4">
+              <li>• Ücretsiz AI kredileriniz bittiğinde kendi anahtarınızı ekleyebilirsiniz</li>
+              <li>• Model kullanım maliyeti doğrudan sizin hesabınıza yansır</li>
+              <li>• API anahtarınız şifrelenmiş olarak saklanır</li>
+            </ul>
+          </div>
+          <div className="ml-4">
+            <a
+              href="/settings/ai"
+              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Yapılandır
+              <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* n8n Integration Status */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">n8n Entegrasyon Durumu</h2>

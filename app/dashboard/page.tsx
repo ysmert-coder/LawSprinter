@@ -5,6 +5,7 @@ import { getFirmCriticalDeadlines, getFirmUpcomingDeadlines } from '../../src/li
 import { getFirmPendingClientEvents } from '../../src/lib/services/caseEvents'
 import { getFirmExpiringContracts } from '../../src/lib/services/contracts'
 import { getCaseStatusDistribution, getMonthlyCaseStats } from '../../src/lib/services/cases'
+import BillingWidget from './billing-widget'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -93,6 +94,11 @@ export default async function DashboardPage() {
         <p className="mt-2 text-gray-600">
           İşte bugünün özeti ve önemli bildirimler
         </p>
+      </div>
+
+      {/* Billing Widget */}
+      <div className="mb-6">
+        <BillingWidget />
       </div>
 
       {/* Critical Tasks */}

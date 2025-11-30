@@ -7,8 +7,8 @@
         "MCP_MODE": "stdio",
         "LOG_LEVEL": "error",
         "DISABLE_CONSOLE_OUTPUT": "true",
-        "N8N_API_URL": "http://localhost:5678",
-        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxZjRkODQyNi1kMTlmLTRhZGEtYTUyMC1kMzBlZDljZjgzYzUiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzYzMTk4OTAwfQ.nlI2HYlInYjEH8TlYcQAWByBRQgMaGbZ97fwfGxT9QM"
+        "N8N_API_URL": "http://34.52.135.43:5678",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1M2U1YjIyMC1lN2ExLTQzYWMtYTJiZi02YjQ2NmUwNjU2YWYiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY0NTEyOTcyfQ.9zq7JAs8ocm-rrHJFvg1IpLe01CQyQqmc3Wu1yWRbF4"
       }
     }
   }

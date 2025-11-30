@@ -14,30 +14,29 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 # Base URL: http://localhost:5678 (or your n8n production URL)
 
 # Case Assistant - AI-powered case analysis
-N8N_CASE_ASSISTANT_WEBHOOK_URL=http://localhost:5678/webhook/case-assistant
+N8N_CASE_ASSISTANT_WEBHOOK_URL=http://34.52.135.43:5678/webhook/case-assistant
 
 # Strategy Generator - Legal strategy generation by area
-N8N_STRATEGY_WEBHOOK_URL=http://localhost:5678/webhook/strategy
+N8N_STRATEGY_WEBHOOK_URL=http://34.52.135.43:5678/webhook/strategy
 
-# Client Profile Analyzer - AI client communication analysis
-N8N_CLIENT_PROFILE_WEBHOOK_URL=http://localhost:5678/webhook/client-profile
+
 
 # Training Content Generator - Lawyer academy content
-N8N_TRAINING_WEBHOOK_URL=http://localhost:5678/webhook/training
+N8N_TRAINING_WEBHOOK_URL=http://34.52.135.43:5678/webhook/training
 
 # Invoice Reminder - Payment reminder message generator
-N8N_INVOICE_REMINDER_WEBHOOK_URL=http://localhost:5678/webhook/invoice-reminder
+N8N_INVOICE_REMINDER_WEBHOOK_URL=http://34.52.135.43:5678/webhook/invoice-reminder
 
 # Contract Analyzer - Existing workflow
-N8N_CONTRACT_ANALYZE_WEBHOOK_URL=http://localhost:5678/webhook/contract-analyze
+N8N_CONTRACT_ANALYZE_WEBHOOK_URL=http://34.52.135.43:5678/webhook/contract-analyze
 
 # Hearing Follow-up - Existing workflow
-N8N_HEARING_FOLLOWUP_WEBHOOK_URL=http://localhost:5678/webhook/hearing-followup
+N8N_HEARING_FOLLOWUP_WEBHOOK_URL=http://34.52.135.43:5678/webhook/hearing-followup
 
 # Client Status Notification - Existing workflow
-N8N_CLIENT_STATUS_NOTIFY_WEBHOOK_URL=http://localhost:5678/webhook/client-status
+N8N_CLIENT_STATUS_NOTIFY_WEBHOOK_URL=http://34.52.135.43:5678/webhook/client-status
 
-N8N_EMBEDDINGS_WEBHOOK_URL=http://localhost:5678/webhook/generate-embeddings
+N8N_EMBEDDINGS_WEBHOOK_URL=http://34.52.135.43:5678/webhook/generate-embeddings
 
 
 ## ✅ Oluşturulan n8n Workflow'ları

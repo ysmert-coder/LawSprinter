@@ -68,6 +68,44 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Check subscription status for protected routes (except settings and subscription expired page)
+  if (user && isProtectedRoute && !pathname.startsWith('/settings') && pathname !== '/abonelik-bitti') {
+    try {
+      // Get user's firm_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('firm_id')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.firm_id) {
+        // Get firm billing
+        const { data: billing } = await supabase
+          .from('firm_billing')
+          .select('plan, subscription_valid_until, is_active')
+          .eq('firm_id', profile.firm_id)
+          .single()
+
+        // Check if subscription is expired for paid plans
+        if (billing && billing.plan !== 'FREE') {
+          const isActive = billing.is_active
+          const validUntil = billing.subscription_valid_until ? new Date(billing.subscription_valid_until) : null
+          const now = new Date()
+
+          if (!isActive || (validUntil && validUntil < now)) {
+            // Subscription expired - redirect to subscription expired page
+            const redirectUrl = request.nextUrl.clone()
+            redirectUrl.pathname = '/abonelik-bitti'
+            return NextResponse.redirect(redirectUrl)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[Middleware] Error checking subscription:', error)
+      // Don't block access if there's an error checking subscription
+    }
+  }
+
   return supabaseResponse
 }
 

@@ -4,52 +4,50 @@ export default function Pricing() {
   const plans = [
     {
       name: 'Solo',
-      target: 'Bireysel çalışan avukatlar için ideal',
-      price: 'Talep üzerine',
+      target: 'Tek avukat için ideal',
+      price: '2.000 TL/ay',
+      priceNote: '+ AI kullanım maliyeti',
       features: [
-        'Tek kullanıcı hesabı',
-        'Dava Asistanı (AI)',
-        'Süre takibi ve hatırlatmalar',
-        'Sözleşme radarı',
-        'Müvekkil kartları',
-        'Temel raporlama',
-        'Ücretsiz AI analiz kredileri',
+        '1 kullanıcı',
+        'Tüm modüller: Dosyalar, Süreler, Sözleşme Radar',
+        'AI Asistan: Dava Asistanı, Strateji Merkezi, Dilekçe Üretici',
+        'Müşteri Yönetimi & Muhasebe',
+        'Kendi OpenAI/OpenRouter API anahtarınızla çalışır',
+        'Model kullanım maliyeti doğrudan hesabınıza yansır',
+        'E-posta desteği',
       ],
       gradient: 'from-blue-500 to-cyan-500',
       popular: false,
     },
     {
       name: 'Büro',
-      target: '2-10 kullanıcılı hukuk büroları için',
-      price: 'Talep üzerine',
+      target: 'Küçük/orta hukuk büroları için',
+      price: '5.000 TL/ay',
+      priceNote: 'Maksimum 5 kullanıcı + AI maliyeti',
       features: [
-        '2-10 kullanıcı',
-        'Tüm AI modülleri',
-        'Süre & sözleşme radarı',
-        'Müvekkil yönetimi & profil analizi',
-        'Muhasebe & tahsilat asistanı',
-        'Strateji merkezi',
-        'Dilekçe üretici & inceleme',
-        'Akıllı hukuk bilgi tabanı',
-        'Gelişmiş raporlama',
-        'Öncelikli destek',
+        'Maksimum 5 kullanıcı',
+        'Tüm Solo özellikleri',
+        'Ortak dosya ve müvekkil havuzu',
+        'Ortak raporlama ve analitik',
+        'Kendi API anahtarınızla çalışır',
+        'Takım işbirliği araçları',
+        'Öncelikli e-posta desteği',
       ],
       gradient: 'from-indigo-600 to-purple-600',
       popular: true,
     },
     {
       name: 'Kurumsal',
-      target: '10+ kullanıcı, özel gereksinimler',
-      price: 'Özel fiyatlandırma',
+      target: '5+ kullanıcı, özel ihtiyaçlar',
+      price: 'Özel Fiyat',
+      priceNote: 'Teklif için iletişime geçin',
       features: [
         'Sınırsız kullanıcı',
-        'Tüm modüller',
+        'Tüm Büro özellikleri',
         'Özel entegrasyonlar',
-        'API erişimi',
         'Özel eğitim ve onboarding',
-        'Dedicated hesap yöneticisi',
+        'Dedicated support',
         'SLA garantisi',
-        'Özel AI model eğitimi',
         'Çoklu ofis/şube yönetimi',
         '7/24 premium destek',
       ],
@@ -74,14 +72,24 @@ export default function Pricing() {
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Fiyatlandırma
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-            Büronuzun büyüklüğüne ve ihtiyaçlarına göre esnek planlar
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-6">
+            Her yeni LawSprinter hesabı, sistemin kendi AI altyapısıyla <strong>tek seferlik 20 ücretsiz AI analizi</strong> ile başlar. 
+            Kredi bittiğinde AI modülleri durur. Devam etmek için abonelik planı seçebilir veya kendi OpenAI/OpenRouter API anahtarınızı 
+            ekleyerek maliyeti doğrudan kendi hesabınızdan karşılayabilirsiniz.
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Kayıt olduğunuzda ücretsiz AI analiz kredisi dahil
+          <div className="flex flex-wrap justify-center gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              20 ücretsiz AI kredisi
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M15 9a2 2 0 10-4 0v5a2 2 0 01-2 2h6a2 2 0 002-2V9a2 2 0 10-4 0v5a2 2 0 01-2 2h6a2 2 0 002-2V9z" clipRule="evenodd" />
+              </svg>
+              Kendi API anahtarınızı kullanabilirsiniz
+            </div>
           </div>
         </div>
 
@@ -120,7 +128,7 @@ export default function Pricing() {
                     {plan.price}
                   </div>
                   <p className="text-sm text-gray-500">
-                    Kullanımınıza göre kredi paketleri
+                    {plan.priceNote}
                   </p>
                 </div>
 

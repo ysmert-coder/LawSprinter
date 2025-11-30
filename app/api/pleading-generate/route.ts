@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '../../../src/lib/supabaseServer'
 import { callN8NWebhook } from '../../../lib/n8n'
 import { searchHybridRag, mapHybridResultToSources, type RagSource } from '../../../lib/services/rag'
+import { checkBillingForAI, logAICall } from '../../../lib/middleware/billingCheck'
 
 /**
  * Request body type
@@ -71,7 +72,13 @@ export async function POST(request: NextRequest) {
     console.log('[pleading-generate] Case type:', caseType)
     console.log('[pleading-generate] Description length:', shortDescription.length)
 
-    // Step 1: Search for relevant sources via RAG
+    // Step 1: Check billing and get LLM config if needed
+    const billingCheck = await checkBillingForAI(user.id)
+    if (!billingCheck.success) {
+      return billingCheck.error_response!
+    }
+
+    // Step 2: Search for relevant sources via RAG
     let sources: RagSource[] = []
 
     try {
@@ -93,17 +100,23 @@ export async function POST(request: NextRequest) {
       sources = []
     }
 
-    // Step 2: Call n8n webhook with sources
-    const result = await callN8NWebhook<PleadingGenerateResponse>(
-      'PLEADING_GENERATOR',
-      {
-        userId: user.id,
-        caseType: caseType.trim(),
-        shortDescription: shortDescription.trim(),
-        fileUrl: fileUrl?.trim() || null,
-        sources,
-      }
-    )
+    // Step 3: Call n8n webhook with sources (and optional LLM config)
+    const n8nPayload: any = {
+      userId: user.id,
+      caseType: caseType.trim(),
+      shortDescription: shortDescription.trim(),
+      fileUrl: fileUrl?.trim() || null,
+      sources,
+    }
+
+    if (billingCheck.llm_config) {
+      n8nPayload.llmConfig = billingCheck.llm_config
+    }
+
+    const result = await callN8NWebhook<PleadingGenerateResponse>('PLEADING_GENERATOR', n8nPayload)
+
+    // Step 4: Log usage
+    await logAICall(billingCheck.firm_id!, user.id, 'PLEADING_GENERATE', billingCheck.has_byok!)
 
     console.log('[pleading-generate] Pleading draft generated successfully')
 
