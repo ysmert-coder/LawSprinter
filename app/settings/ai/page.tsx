@@ -15,13 +15,60 @@ import {
   UpdateAISettingsRequest,
   DecryptedAISettings,
 } from '../../../lib/types/billing'
-import {
-  getSupportedModels,
-  getProviderDisplayName,
-  getProviderDocsURL,
-} from '../../../lib/services/aiSettings'
 
 const PROVIDERS: AIProvider[] = ['openai', 'openrouter', 'deepseek', 'ollama']
+
+// Client-side helper functions
+function getSupportedModels(provider: AIProvider): string[] {
+  switch (provider) {
+    case 'openai':
+      return ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo']
+    case 'openrouter':
+      return [
+        'openai/gpt-4o',
+        'openai/gpt-4o-mini',
+        'anthropic/claude-3.5-sonnet',
+        'deepseek/deepseek-chat',
+        'google/gemini-pro-1.5',
+      ]
+    case 'deepseek':
+      return ['deepseek-chat', 'deepseek-coder']
+    case 'ollama':
+      return [] // User enters custom model name
+    default:
+      return []
+  }
+}
+
+function getProviderDisplayName(provider: AIProvider): string {
+  switch (provider) {
+    case 'openai':
+      return 'OpenAI'
+    case 'openrouter':
+      return 'OpenRouter'
+    case 'deepseek':
+      return 'DeepSeek'
+    case 'ollama':
+      return 'Ollama (Self-hosted)'
+    default:
+      return provider
+  }
+}
+
+function getProviderDocsURL(provider: AIProvider): string {
+  switch (provider) {
+    case 'openai':
+      return 'https://platform.openai.com/docs/api-reference'
+    case 'openrouter':
+      return 'https://openrouter.ai/docs'
+    case 'deepseek':
+      return 'https://platform.deepseek.com/api-docs'
+    case 'ollama':
+      return 'https://ollama.ai/library'
+    default:
+      return '#'
+  }
+}
 
 export default function AISettingsPage() {
   const router = useRouter()
