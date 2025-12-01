@@ -6,16 +6,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/src/lib/supabaseServer'
-import { isAdmin } from '@/lib/middleware/adminCheck'
+import { createClient } from '../../../../../src/lib/supabaseServer'
+import { isAdmin } from '../../../../../lib/middleware/adminCheck'
 import {
   createPublicLegalDoc,
   insertPublicChunksFromEmbeddings,
   LegalArea,
   DocumentType,
-} from '@/lib/services/rag'
-import { callN8NEmbeddings } from '@/lib/n8n'
-import { parseFile, isValidFileType } from '@/lib/utils/fileParser'
+} from '../../../../../lib/services/rag'
+import { callN8NEmbeddings } from '../../../../../lib/n8n'
+import { parseFile, isValidFileType } from '../../../../../lib/utils/fileParser'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
