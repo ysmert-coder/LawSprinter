@@ -129,6 +129,7 @@ export function getN8nConfigStatus(): Record<N8NWebhookType, boolean> {
     COLLECTION_ASSISTANT: isWebhookConfigured('COLLECTION_ASSISTANT'),
     DRAFT_REVIEWER: isWebhookConfigured('DRAFT_REVIEWER'),
     EMBEDDINGS: isWebhookConfigured('EMBEDDINGS'),
+    GENERATE_EMBEDDINGS: isWebhookConfigured('GENERATE_EMBEDDINGS'),
     PLEADING_GENERATOR: isWebhookConfigured('PLEADING_GENERATOR'),
     PLEADING_REVIEW: isWebhookConfigured('PLEADING_REVIEW'),
   }
