@@ -145,9 +145,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 10. Insert chunks
+    const chunkTexts = embeddingResponse.chunks.map(c => c.content)
+    const embeddings = embeddingResponse.chunks.map(c => c.embedding)
+    
     const chunksInserted = await insertPublicChunksFromEmbeddings({
       docId,
-      chunks: embeddingResponse.chunks,
+      chunks: chunkTexts,
+      embeddings: embeddings,
     })
 
     console.log(`[RAG Import] Inserted ${chunksInserted} chunks for doc ${docId}`)

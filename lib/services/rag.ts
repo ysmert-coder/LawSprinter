@@ -418,26 +418,24 @@ export async function createPublicLegalDoc(params: {
       .from('public_legal_docs')
       .insert({
         title: params.title,
-        area: params.area,
+        legal_area: params.area, // Changed from 'area' to 'legal_area'
         doc_type: params.docType,
         court: params.court,
         year: params.year,
-        storage_path: params.storagePath,
-        text_length: params.textLength,
-        is_active: true,
+        file_url: params.storagePath, // Changed from 'storage_path' to 'file_url'
       })
       .select('id')
       .single()
 
     if (error) {
       console.error('[createPublicLegalDoc] Error:', error)
-      throw new Error('Doküman kaydedilemedi')
+      throw new Error(`Doküman kaydedilemedi: ${error.message}`)
     }
 
     return data.id
-  } catch (error) {
+  } catch (error: any) {
     console.error('[createPublicLegalDoc] Exception:', error)
-    throw error
+    throw new Error(error.message || 'Doküman oluşturulamadı')
   }
 }
 
@@ -446,16 +444,17 @@ export async function createPublicLegalDoc(params: {
  */
 export async function insertPublicChunksFromEmbeddings(params: {
   docId: string
-  chunks: Array<{ content: string; embedding: number[] }>
+  chunks: string[] // Array of chunk texts (n8n returns chunks array)
+  embeddings?: number[][] // Optional embeddings array
 }): Promise<number> {
   try {
     const supabase = await createClient()
 
-    const chunksToInsert = params.chunks.map((chunk, index) => ({
+    const chunksToInsert = params.chunks.map((chunkText, index) => ({
       doc_id: params.docId,
       chunk_index: index,
-      content: chunk.content,
-      embedding: chunk.embedding,
+      chunk_text: chunkText, // Changed from 'content' to 'chunk_text'
+      embedding: params.embeddings?.[index] || null, // Optional embedding
     }))
 
     const { error } = await supabase
@@ -464,13 +463,13 @@ export async function insertPublicChunksFromEmbeddings(params: {
 
     if (error) {
       console.error('[insertPublicChunksFromEmbeddings] Error:', error)
-      throw new Error('Chunk\'lar kaydedilemedi')
+      throw new Error(`Chunk'lar kaydedilemedi: ${error.message}`)
     }
 
     return chunksToInsert.length
-  } catch (error) {
+  } catch (error: any) {
     console.error('[insertPublicChunksFromEmbeddings] Exception:', error)
-    throw error
+    throw new Error(error.message || 'Chunk ekleme başarısız')
   }
 }
 
