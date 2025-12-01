@@ -82,7 +82,11 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error('[RAG Import] Storage upload error:', uploadError)
-      return NextResponse.json({ error: 'Dosya yüklenemedi' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Dosya yüklenemedi', 
+        details: uploadError.message,
+        hint: 'Supabase Storage bucket (rag_public) var mı? Policies doğru mu?'
+      }, { status: 500 })
     }
 
     // 7. Extract text

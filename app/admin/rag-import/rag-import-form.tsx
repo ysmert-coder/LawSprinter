@@ -103,7 +103,10 @@ export default function RAGImportForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Yükleme başarısız')
+        const errorMsg = data.error || 'Yükleme başarısız'
+        const details = data.details ? ` (Detay: ${data.details})` : ''
+        const hint = data.hint ? ` ${data.hint}` : ''
+        throw new Error(`${errorMsg}${details}${hint}`)
       }
 
       // Success
